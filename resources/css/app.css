@@ -1,0 +1,2487 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   BROLY ASIAN BARBER — charte graphique
+   Répartition visée : 70 % noir · 20 % vert/blanc · 10 % accents.
+   ========================================================================== */
+
+:root {
+    /* --- Couleurs de la charte --- */
+    --black:        #050507;   /* fond principal — noir profond */
+    --green:        #69E64B;   /* vert Saiyan — boutons, liens, icônes */
+    --yellow:       #FFD52A;   /* jaune énergie — accroches, infos fortes */
+    --orange:       #FF6B22;   /* boutique et promotions */
+    --white:        #FFFFFF;   /* textes principaux */
+
+    /* --- Déclinaisons de travail --- */
+    --green-dim:    #4CB833;
+    --green-glow:   rgba(105, 230, 75, .55);
+    --surface:      rgba(14, 16, 13, .86);
+    --surface-solid:#0C0E0B;
+    --border:       rgba(105, 230, 75, .18);
+    --border-strong:rgba(105, 230, 75, .45);
+    --muted:        rgba(255, 255, 255, .72);
+    --faint:        rgba(255, 255, 255, .45);
+    --danger:       #FF5A5A;
+    --danger-border:rgba(255, 90, 90, .38);
+
+    /* --- Typographies --- */
+    --font-title:   'Bebas Neue', 'Arial Narrow', sans-serif;  /* titres, prestations */
+    --font-accent:  'Anton', 'Arial Black', sans-serif;        /* boutons, prix, accroches */
+    --font-body:    'Roboto', -apple-system, 'Segoe UI', sans-serif;
+
+    /* --- Mesures --- */
+    --topbar-h:     88px;
+    --tabbar-h:     64px;
+    --radius:       10px;
+    --radius-sm:    6px;
+    --radius-pill:  999px;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+    margin: 0;
+    background: var(--black);
+    color: var(--white);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+img { display: block; max-width: 100%; }
+button { font: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; }
+
+/* --------------------------------------------------------------------------
+   Typographie
+   Titres en capitales, paragraphes courts et aérés, contraste fort.
+   -------------------------------------------------------------------------- */
+h1, h2, h3, .title {
+    font-family: var(--font-title);
+    text-transform: uppercase;
+    letter-spacing: .02em;
+    font-weight: 400;
+    line-height: 1;
+    margin: 0;
+}
+h1 { font-size: clamp(38px, 11vw, 64px); }
+h2 { font-size: clamp(28px, 7vw, 44px); }
+h3 { font-size: clamp(20px, 5vw, 26px); }
+
+.accent, .price, .btn {
+    font-family: var(--font-accent);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+p { margin: 0 0 14px; }
+.lede { color: var(--muted); font-size: 16px; line-height: 1.7; text-shadow: 0 2px 12px rgba(0, 0, 0, .85); }
+.muted { color: var(--muted); }
+
+/* Titre néon : la signature visuelle des en-têtes de page */
+.title-glow {
+    color: var(--green);
+    text-shadow:
+        0 0 8px rgba(105, 230, 75, .55),
+        0 0 24px rgba(105, 230, 75, .35),
+        /* Ombre noire portée : les titres reposent directement sur la photo */
+        0 3px 18px rgba(0, 0, 0, .9),
+        0 2px 0 rgba(0, 0, 0, .6);
+}
+.title-yellow { color: var(--yellow); }
+
+/* --------------------------------------------------------------------------
+   Structure
+   -------------------------------------------------------------------------- */
+.app { min-height: 100vh; position: relative; }
+
+.shell {
+    width: 100%;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 18px;
+}
+
+.page {
+    padding-top: calc(var(--topbar-h) + 26px);
+    padding-bottom: calc(var(--tabbar-h) + 46px);
+}
+/* Pleine hauteur : le contenu passe DERRIÈRE la barre transparente. Une marge
+   ici laisserait apparaître le fond de page sous la barre, et l'effet de
+   transparence serait perdu. Le bandeau réserve lui-même la place nécessaire. */
+.page--flush { padding-top: 0; }
+/* overflow visible obligatoire : un parent qui rogne annule le position: sticky
+   du fond de bandeau. */
+.page--flush, .app { overflow: visible; }
+
+.section { padding: 44px 0; }
+.section--tight { padding: 28px 0; }
+
+/* Fond assombri derrière les textes, exigé par la charte */
+.veil {
+    background: linear-gradient(180deg, rgba(5, 5, 7, .35), rgba(5, 5, 7, .88));
+}
+
+/* --------------------------------------------------------------------------
+   Boutons
+   Vert réservé aux actions principales. Boutons de réservation identiques
+   partout : c'est la même classe .btn--book.
+   -------------------------------------------------------------------------- */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 15px 30px;
+    font-size: 16px;
+    border: 2px solid transparent;
+    border-radius: var(--radius-sm);
+    transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.btn:active { transform: translateY(1px); }
+
+/* Action principale : contour vert lumineux sur fond sombre (cf. maquette) */
+.btn--book {
+    background: rgba(105, 230, 75, .10);
+    border-color: var(--green);
+    color: var(--green);
+    box-shadow: 0 0 18px rgba(105, 230, 75, .28), inset 0 0 18px rgba(105, 230, 75, .10);
+}
+.btn--book:hover {
+    background: rgba(105, 230, 75, .18);
+    box-shadow: 0 0 30px rgba(105, 230, 75, .5), inset 0 0 22px rgba(105, 230, 75, .16);
+}
+
+/* Charge du ki : réservée à l'action principale du bandeau. Étendue à tous les
+   boutons « Réserver » de la page prestations, elle ferait guirlande. */
+.btn--charged {
+    animation: ki-breathe 3.2s ease-in-out infinite;
+}
+@keyframes ki-breathe {
+    0%, 100% {
+        box-shadow: 0 0 14px rgba(105, 230, 75, .25), inset 0 0 14px rgba(105, 230, 75, .08);
+    }
+    50% {
+        box-shadow: 0 0 32px rgba(105, 230, 75, .58), inset 0 0 22px rgba(105, 230, 75, .18);
+    }
+}
+/* Au survol, la charge s'accélère et monte d'un cran */
+.btn--charged:hover { animation-duration: 1.1s; }
+
+.btn--solid {
+    background: var(--green);
+    color: #04120A;
+    box-shadow: 0 0 24px rgba(105, 230, 75, .35);
+}
+.btn--solid:hover { box-shadow: 0 0 38px rgba(105, 230, 75, .6); }
+
+/* Jaune : le bouton du menu déroulant, cf. maquette hamburger */
+.btn--yellow { background: var(--yellow); color: #1A1200; }
+
+/* Orange : boutique uniquement */
+.btn--shop { background: var(--orange); color: #180700; }
+
+.btn--ghost { border-color: var(--border-strong); color: var(--white); }
+.btn--ghost:hover { border-color: var(--green); color: var(--green); }
+
+.btn--block { display: flex; width: 100%; }
+.btn--lg { padding: 18px 38px; font-size: 19px; }
+.btn--sm { padding: 10px 18px; font-size: 13px; }
+.btn:disabled { opacity: .35; cursor: not-allowed; box-shadow: none; }
+
+/* --------------------------------------------------------------------------
+   Cartes
+   -------------------------------------------------------------------------- */
+.card {
+    /* Translucides : la photo de fond reste perceptible à travers les cartes.
+       Le flou fait le travail qu'un fond opaque ferait — il casse les détails
+       de l'image sans la masquer, ce qui garde le texte lisible. */
+    /* Opaques : ce sont elles qui portent le contenu à lire, et la photo de
+       fond ne doit pas concurrencer le texte. */
+    background: rgba(10, 12, 10, .90);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+/* Sans backdrop-filter — quelques versions de Firefox et de navigateurs
+   mobiles — le texte se poserait à nu sur la photo. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    /* Sans flou d'arrière-plan, la carte se referme complètement. */
+    .card { background: rgba(10, 12, 10, .94); }
+}
+
+.card--glow { border-color: var(--border-strong); box-shadow: 0 0 28px rgba(105, 230, 75, .12); }
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-accent);
+    font-size: 12px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+.badge--green  { background: rgba(105, 230, 75, .14); color: var(--green); border: 1px solid var(--border-strong); }
+.badge--yellow { background: rgba(255, 213, 42, .14); color: var(--yellow); border: 1px solid rgba(255, 213, 42, .4); }
+.badge--orange { background: rgba(255, 107, 34, .14); color: var(--orange); border: 1px solid rgba(255, 107, 34, .4); }
+.badge--danger { background: rgba(255, 90, 90, .12); color: var(--danger); border: 1px solid var(--danger-border); }
+
+/* --------------------------------------------------------------------------
+   Formulaires
+   -------------------------------------------------------------------------- */
+label { display: block; }
+.field { margin-bottom: 18px; }
+.field-label {
+    display: block;
+    margin-bottom: 8px;
+    font-family: var(--font-accent);
+    font-size: 12px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--green);
+}
+.field-help { font-size: 13px; color: var(--muted); margin: 0 0 10px; }
+.field-error { color: var(--danger); font-size: 13px; margin: 8px 0 0; }
+
+input[type="text"], input[type="email"], input[type="tel"], input[type="password"],
+input[type="number"], input[type="date"], input[type="time"], select, textarea {
+    width: 100%;
+    padding: 13px 15px;
+    background: var(--surface-solid);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--white);
+    font-family: var(--font-body);
+    font-size: 15px;
+    transition: border-color .18s ease, box-shadow .18s ease;
+}
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px rgba(105, 230, 75, .16);
+}
+input::placeholder, textarea::placeholder { color: var(--faint); }
+
+/* --------------------------------------------------------------------------
+   Cases à cocher et boutons radio
+
+   Redessinés entièrement : le rendu natif est bleu clair, illisible sur fond
+   sombre et étranger à la charte. `appearance: none` retire l'apparence du
+   système, la coche est dessinée en pseudo-élément.
+   -------------------------------------------------------------------------- */
+input[type="checkbox"],
+input[type="radio"] {
+    appearance: none;
+    -webkit-appearance: none;
+    /* flex-shrink: 0 : dans un libellé en flex, la case serait écrasée par un
+       texte long. */
+    flex: 0 0 auto;
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    padding: 0;
+    background: var(--surface-solid);
+    border: 1px solid var(--border-strong);
+    border-radius: 5px;
+    cursor: pointer;
+    position: relative;
+    transition: background .15s ease, border-color .15s ease;
+}
+input[type="radio"] { border-radius: 50%; }
+
+input[type="checkbox"]:hover,
+input[type="radio"]:hover { border-color: var(--green); }
+
+input[type="checkbox"]:checked,
+input[type="radio"]:checked {
+    background: var(--green);
+    border-color: var(--green);
+}
+
+/* Coche dessinée en bordures : plus net qu'un caractère, et indépendant de
+   la police chargée. */
+input[type="checkbox"]:checked::after {
+    content: "";
+    position: absolute;
+    left: 6px; top: 2px;
+    width: 5px; height: 10px;
+    border: solid #04120A;
+    border-width: 0 2.5px 2.5px 0;
+    transform: rotate(45deg);
+}
+input[type="radio"]:checked::after {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border-radius: 50%;
+    background: #04120A;
+}
+
+input[type="checkbox"]:focus-visible,
+input[type="radio"]:focus-visible {
+    outline: 2px solid var(--green);
+    outline-offset: 2px;
+}
+
+input[type="checkbox"]:disabled,
+input[type="radio"]:disabled { opacity: .4; cursor: not-allowed; }
+
+/* Libellé accolé à une case : alignement et zone cliquable confortable */
+.check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: var(--muted);
+    cursor: pointer;
+}
+.check--top { align-items: flex-start; }
+.check--top input { margin-top: 2px; }
+
+/* Dans un formulaire en colonne, la case a besoin de la même respiration que
+   les autres champs. Ne pas utiliser .field pour cela : sa marge basse
+   décalerait l'étiquette dans une ligne alignée horizontalement. */
+.check--spaced { margin-bottom: 18px; }
+
+/* --------------------------------------------------------------------------
+   Animations de chargement
+   Cohérentes avec l'univers, et légères pour ne pas ralentir la navigation.
+   -------------------------------------------------------------------------- */
+
+/* Boule d'énergie : indicateur principal */
+.loader {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 32%, #EFFFE6, var(--green) 45%, var(--green-dim) 75%);
+    box-shadow: 0 0 22px var(--green-glow), 0 0 46px rgba(105, 230, 75, .3);
+    animation: ki-pulse 1.1s ease-in-out infinite;
+}
+@keyframes ki-pulse {
+    0%, 100% { transform: scale(1);    box-shadow: 0 0 20px var(--green-glow), 0 0 40px rgba(105, 230, 75, .25); }
+    50%      { transform: scale(1.14); box-shadow: 0 0 34px var(--green-glow), 0 0 70px rgba(105, 230, 75, .45); }
+}
+
+/* Barre de progression en haut de page, pendant les changements de page */
+.route-progress {
+    position: fixed;
+    top: 0; left: 0;
+    height: 3px;
+    z-index: 60;
+    background: linear-gradient(90deg, var(--green), var(--yellow));
+    box-shadow: 0 0 14px var(--green-glow);
+    transition: width .25s ease, opacity .3s ease;
+}
+
+/* Fond d'attente sous une image en cours de chargement */
+.skeleton {
+    position: relative;
+    overflow: hidden;
+    background: var(--surface-solid);
+}
+.skeleton::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(100deg,
+        transparent 30%, rgba(105, 230, 75, .09) 50%, transparent 70%);
+    background-size: 250% 100%;
+    animation: sweep 1.3s ease-in-out infinite;
+}
+@keyframes sweep {
+    from { background-position: 140% 0; }
+    to   { background-position: -40% 0; }
+}
+
+/* Révélation au défilement, pilotée par le navigateur — aucun JavaScript.
+   Le @supports est indispensable : sans lui, un navigateur non compatible
+   garderait l'opacité à zéro et la page paraîtrait vide. */
+@supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+        .reveal {
+            animation: reveal-in linear both;
+            animation-timeline: view();
+            animation-range: entry 0% cover 20%;
+        }
+    }
+}
+@keyframes reveal-in {
+    from { opacity: 0; transform: translate3d(0, 24px, 0); }
+    to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .loader, .skeleton::after { animation: none; }
+}
+
+/* --------------------------------------------------------------------------
+   Utilitaires
+   -------------------------------------------------------------------------- */
+.sr-only {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+.stack > * + * { margin-top: 14px; }
+.center { text-align: center; }
+
+/* ==========================================================================
+   EN-TÊTE ET NAVIGATION
+   Logo en haut à gauche, menu hamburger en haut à droite (charte).
+   ========================================================================== */
+.topbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 50;
+    height: var(--topbar-h);
+    display: flex;
+    align-items: center;
+    background: transparent;
+    border-bottom: 1px solid transparent;
+    transition: background .3s ease, border-color .3s ease, box-shadow .3s ease;
+}
+/* Au défilement, la barre se densifie pour rester lisible sur tout contenu */
+.topbar.is-scrolled {
+    background: rgba(5, 5, 7, .9);
+    backdrop-filter: blur(14px);
+    border-bottom-color: var(--border);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, .55);
+}
+.topbar-inner {
+    width: 100%;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    /* Indispensable : un height: 100% sur le logo ne se résout que si TOUS
+       ses parents ont une hauteur. Sans cette ligne, l'image reprend sa
+       taille d'origine — 500 px — et déborde de la page. */
+    height: 100%;
+}
+.brand {
+    display: flex; align-items: center; gap: 10px;
+    height: 100%;
+    /* 8 px de retrait, comme dans le back office : les deux logos doivent
+       faire exactement la même taille. */
+    padding: 8px 0;
+    min-width: 0;
+}
+.brand img {
+    /* Occupe toute la hauteur disponible ; la largeur suit les proportions.
+       max-width empêche le logo, très allongé, de pousser le bouton du menu
+       hors de l'écran sur un téléphone étroit. */
+    height: 100%;
+    width: auto;
+    max-width: 58vw;
+    object-fit: contain;
+    object-position: left center;
+    /* Ombre portée : le logo est posé sur la photo, sans fond derrière lui */
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, .75));
+}
+.brand-fallback {
+    font-family: var(--font-title);
+    font-size: 22px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+/* Bouton hamburger : trois barres qui se croisent à l'ouverture */
+.burger {
+    width: 46px; height: 46px;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+.burger span {
+    display: block;
+    width: 28px; height: 3px;
+    background: var(--green);
+    border-radius: 2px;
+    box-shadow: 0 0 10px var(--green-glow);
+    transition: transform .28s ease, opacity .2s ease;
+}
+.burger.is-open span:nth-child(1) { transform: translateY(9px) rotate(45deg); }
+.burger.is-open span:nth-child(2) { opacity: 0; }
+.burger.is-open span:nth-child(3) { transform: translateY(-9px) rotate(-45deg); }
+
+/* Panneau déroulant, sous la barre */
+.menu-panel {
+    position: fixed;
+    top: var(--topbar-h); left: 0; right: 0;
+    z-index: 45;
+    background: rgba(5, 5, 7, .96);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 26px 18px 32px;
+    text-align: center;
+}
+.menu-panel a {
+    display: block;
+    padding: 11px 0;
+    font-family: var(--font-title);
+    font-size: 22px;
+    letter-spacing: .04em;
+    color: var(--green);
+    text-transform: none;
+}
+.menu-panel a:hover { color: var(--white); text-shadow: 0 0 14px var(--green-glow); }
+.menu-panel .btn { margin-top: 18px; }
+
+/* Transition du panneau */
+.menu-enter-active, .menu-leave-active { transition: opacity .22s ease, transform .22s ease; }
+.menu-enter-from, .menu-leave-to { opacity: 0; transform: translateY(-12px); }
+
+/* Voile derrière le panneau : ferme le menu au clic */
+.menu-backdrop {
+    position: fixed; inset: 0;
+    z-index: 40;
+    background: rgba(5, 5, 7, .55);
+}
+
+/* --------------------------------------------------------------------------
+   Barre d'onglets basse (maquettes) : ciseaux, calendrier, accueil, compte
+   -------------------------------------------------------------------------- */
+.tabbar {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 50;
+    height: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    background: rgba(5, 5, 7, .94);
+    backdrop-filter: blur(14px);
+    border-top: 1px solid var(--border);
+}
+.tabbar a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    color: var(--green);
+    transition: background .18s ease, box-shadow .18s ease;
+}
+.tabbar a.is-active {
+    background: var(--green);
+    color: #04120A;
+    box-shadow: 0 0 20px var(--green-glow);
+}
+
+/* --------------------------------------------------------------------------
+   Pied de page
+   -------------------------------------------------------------------------- */
+.site-footer {
+    border-top: 1px solid var(--border);
+    /* Opaque : c'est lui qui met fin au fond de page fixe */
+    background: #030304;
+    padding: 34px 0 calc(var(--tabbar-h) + 28px);
+    text-align: center;
+}
+.footer-socials { display: flex; justify-content: center; gap: 14px; margin-bottom: 18px; }
+.footer-socials a {
+    width: 42px; height: 42px;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    color: var(--green);
+}
+.footer-socials a:hover { box-shadow: 0 0 18px var(--green-glow); }
+.footer-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 20px; margin-bottom: 16px; }
+.footer-links a { font-size: 13px; color: var(--muted); }
+.footer-links a:hover { color: var(--green); }
+.footer-legal { font-size: 12px; color: var(--faint); }
+
+@media (min-width: 1024px) {
+    /* La barre basse laisse place à une navigation horizontale sur desktop */
+    .tabbar { display: none; }
+    .page { padding-bottom: 0; }
+    .site-footer { padding-bottom: 34px; }
+}
+
+/* ==========================================================================
+   PAGE D'ACCUEIL
+   ========================================================================== */
+
+/* Fond de page immobile, visible du haut de l'écran jusqu'au pied de page.
+
+   `position: fixed` et non `sticky` : le collant s'arrête avec son parent,
+   c'est pourquoi l'image disparaissait dès les prestations. Fixe, elle reste
+   en place ; c'est le pied de page, opaque, qui la recouvre en fin de course. */
+.page-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+.page-bg img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    object-position: var(--focus, 50% 34%);
+    /* Léger agrandissement : sans cette marge, l'oscillation découvrirait
+       les bords de l'image. */
+    transform: scale(1.05);
+    animation: cloud-float 9s ease-in-out infinite;
+}
+
+/* Flottement du nuage.
+   L'image étant aplatie, le nuage ne peut pas bouger seul : c'est l'ensemble
+   qui oscille. Le décor — ciel, montagnes floues — n'a aucun repère net, donc
+   le mouvement se lit comme celui du nuage. Amplitude volontairement faible :
+   au-delà, l'illusion se rompt et l'on voit le ciel bouger. */
+@keyframes cloud-float {
+    0%, 100% { transform: scale(1.05) translateY(0); }
+    50%      { transform: scale(1.05) translateY(-9px); }
+}
+/* Voile général : le texte du bandeau doit rester lisible sur la photo */
+.page-bg::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(to bottom,
+        rgba(5, 5, 7, .58) 0%,
+        rgba(5, 5, 7, .30) 32%,
+        rgba(5, 5, 7, .62) 76%,
+        rgba(5, 5, 7, .84) 100%);
+}
+
+/* Tout le contenu passe au-dessus du fond */
+.section, .site-footer, .page-veil, .page { position: relative; z-index: 1; }
+
+/* Le bandeau monte d'un cran.
+   Le voile des sections remonte de 240 px sur lui et vient après dans le
+   document : à niveau égal, c'est le voile qui gagne et il intercepte les
+   clics sur le bouton, situé dans cette zone. La partie du voile ainsi
+   recouverte est son remplissage haut, donc vide : rien n'est masqué. */
+.hero { position: relative; z-index: 2; }
+
+/* Pages sans visuel plein écran — prestations, galerie, FAQ, contact…
+   Le fond y est nettement plus assombri : leur contenu commence tout en haut,
+   il n'y a pas de bandeau pour ménager une zone claire. */
+.app--inner .page-bg::after {
+    background: linear-gradient(to bottom,
+        rgba(5, 5, 7, .90) 0%,
+        rgba(5, 5, 7, .84) 40%,
+        rgba(5, 5, 7, .90) 100%);
+}
+
+/* Voile des sections, pleine largeur : le texte s'y détache nettement tandis
+   que l'image reste perceptible derrière.
+
+   Le fondu s'étale sur 340 px et le voile remonte de 200 px sur le bandeau :
+   la limite entre les deux zones devient imperceptible. Sur 90 px, on voyait
+   encore une frontière. */
+.page-veil {
+    /* Le voile remonte sur le bandeau ; le remplissage remet le contenu en place. */
+    margin-top: -240px;
+    padding-top: 240px;
+
+    /* UNE SEULE couche. Une couleur pleine ajoutée sous le dégradé le rendrait
+       inutile : elle couvrirait tout l'élément uniformément et produirait la
+       coupure nette qu'on cherche justement à éviter. Un dégradé prolonge de
+       lui-même sa dernière couleur jusqu'au bas de l'élément. */
+    background: linear-gradient(to bottom,
+        rgba(5, 5, 7, 0)    0,
+        rgba(5, 5, 7, .18)  90px,
+        rgba(5, 5, 7, .46)  190px,
+        rgba(5, 5, 7, .68)  280px,
+        rgba(5, 5, 7, .80)  360px);
+}
+
+/* --------------------------------------------------------------------------
+   Train de fumée
+   Trois volutes qui dérivent le long du flux d'énergie, à gauche du
+   personnage. Positions en pourcentage du visuel : à ajuster si tu changes
+   d'image de fond.
+   -------------------------------------------------------------------------- */
+.smoke { position: absolute; inset: 0; pointer-events: none; }
+
+.smoke-wisp {
+    position: absolute;
+    border-radius: 50%;
+    /* screen : la volute éclaire l'image au lieu de la voiler */
+    mix-blend-mode: screen;
+    filter: blur(16px);
+    opacity: 0;
+}
+/* Six volutes aux délais échelonnés : le flux paraît continu alors que chacune
+   ne fait que traverser puis disparaître. Avec trois seulement, on percevait
+   les trous entre deux passages. */
+.smoke-wisp--1 {
+    left: -6%; top: 53%;
+    width: 30%; height: 12%;
+    background: radial-gradient(ellipse, rgba(180, 220, 255, .42), transparent 68%);
+    animation: smoke-flow 11s linear infinite;
+}
+.smoke-wisp--2 {
+    left: -6%; top: 60%;
+    width: 36%; height: 10%;
+    background: radial-gradient(ellipse, rgba(255, 214, 140, .36), transparent 68%);
+    animation: smoke-flow 14s linear infinite 2.3s;
+}
+.smoke-wisp--3 {
+    left: -6%; top: 48%;
+    width: 26%; height: 9%;
+    background: radial-gradient(ellipse, rgba(210, 235, 255, .32), transparent 68%);
+    animation: smoke-flow 12.5s linear infinite 4.6s;
+}
+.smoke-wisp--4 {
+    left: -6%; top: 57%;
+    width: 32%; height: 11%;
+    background: radial-gradient(ellipse, rgba(196, 226, 255, .30), transparent 68%);
+    animation: smoke-flow 13s linear infinite 6.9s;
+}
+.smoke-wisp--5 {
+    left: -6%; top: 51%;
+    width: 24%; height: 8%;
+    background: radial-gradient(ellipse, rgba(255, 226, 170, .28), transparent 68%);
+    animation: smoke-flow 15s linear infinite 9.2s;
+}
+.smoke-wisp--6 {
+    left: -6%; top: 63%;
+    width: 28%; height: 9%;
+    background: radial-gradient(ellipse, rgba(180, 220, 255, .26), transparent 68%);
+    animation: smoke-flow 16s linear infinite 11.5s;
+}
+
+/* La volute traverse le flux de gauche à droite, s'élève et s'étire en
+   se dissipant. `linear` et non `ease` : une fumée qui accélère puis freine
+   n'a pas l'air portée par un courant. */
+@keyframes smoke-flow {
+    0%   { transform: translate(0, 0) scaleX(.7);          opacity: 0; }
+    12%  {                                                  opacity: .9; }
+    55%  { transform: translate(120%, -4%) scaleX(1.2);    opacity: .7; }
+    85%  {                                                  opacity: .25; }
+    100% { transform: translate(230%, -10%) scaleX(1.6);   opacity: 0; }
+}
+
+/* --------------------------------------------------------------------------
+   Bandeau
+   -------------------------------------------------------------------------- */
+.hero { width: 100%; }
+
+.hero-inner {
+    width: 100%;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    max-width: 1100px; margin: 0 auto;
+    padding: calc(var(--topbar-h) + 40px) 20px 110px;
+    text-align: center;
+}
+
+/* Ligne de lieu, au-dessus de l'accroche (wireframe) */
+.hero-location {
+    font-family: var(--font-body);
+    font-size: 13px;
+    letter-spacing: .08em;
+    color: var(--muted);
+    margin: 0 0 10px;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, .9);
+}
+.hero-tagline {
+    font-family: var(--font-accent);
+    font-size: clamp(15px, 4.4vw, 20px);
+    color: var(--yellow);
+    text-transform: none;
+    letter-spacing: .02em;
+    margin: 0 0 6px;
+    text-shadow: 0 2px 14px rgba(0, 0, 0, .9);
+}
+.hero-sub {
+    font-family: var(--font-accent);
+    font-size: clamp(13px, 3.6vw, 17px);
+    text-transform: none;
+    letter-spacing: .02em;
+    margin: 0 0 26px;
+    text-shadow: 0 2px 14px rgba(0, 0, 0, .9);
+}
+.hero .btn--book { min-width: 240px; align-self: center; }
+
+/* Braises et étoiles, portées par le fond fixe */
+.hero-particles { position: absolute; inset: 0; pointer-events: none; }
+.hero-particles span {
+    position: absolute;
+    border-radius: 50%;
+    background: #FFF3CC;
+    box-shadow: 0 0 14px 3px #FFC24A;
+}
+.hero-particles .ember { animation: hero-ember var(--dur, 8s) linear infinite var(--delay, 0s); }
+.hero-particles .star  { background: #FFFFFF; box-shadow: none;
+                         animation: hero-twinkle var(--dur, 4s) ease-in-out infinite var(--delay, 0s); }
+
+@keyframes hero-ember {
+    0%   { transform: translate(0, 0) scale(.6);         opacity: 0; }
+    12%  { transform: translate(8px, -30px) scale(1);    opacity: 1; }
+    70%  {                                               opacity: .8; }
+    100% { transform: translate(70px, -280px) scale(.4); opacity: 0; }
+}
+@keyframes hero-twinkle {
+    0%, 100% { opacity: .15; transform: scale(.8); }
+    50%      { opacity: 1;   transform: scale(1.5); }
+}
+
+.hero-socials { display: flex; justify-content: center; gap: 14px; margin-top: 30px; }
+.hero-socials a {
+    width: 34px; height: 34px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 9px;
+    color: #FFFFFF;
+    transition: transform .18s ease, box-shadow .18s ease;
+}
+.hero-socials a:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0, 0, 0, .5); }
+.hero-social--tiktok    { background: #0B0B0B; border: 1px solid rgba(255, 255, 255, .22); }
+.hero-social--instagram { background: linear-gradient(135deg, #833AB4, #FD1D1D 55%, #FCB045); }
+
+.btn--lg { padding: 18px 38px; font-size: 19px; }
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-particles span, .smoke-wisp, .page-bg img, .btn--charged { animation: none; }
+    .faq-answer-wrap { transition: none; }
+    .faq-item { opacity: 1; transform: none; transition: none; }
+    .smoke-wisp { opacity: .45; }
+    .page-bg img { transform: scale(1.05); }
+}
+
+/* Titre de page, sur fond visuel — galerie, contact, FAQ, boutique */
+.page-hero {
+    position: relative;
+    padding: calc(var(--topbar-h) + 34px) 0 34px;
+    text-align: center;
+    overflow: hidden;
+}
+.page-hero-media { position: absolute; inset: 0; z-index: 0; }
+.page-hero-media img { width: 100%; height: 100%; object-fit: cover; }
+.page-hero-media::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(to bottom, rgba(5, 5, 7, .78), rgba(5, 5, 7, .92));
+}
+.page-hero-inner { position: relative; z-index: 1; }
+
+/* --------------------------------------------------------------------------
+   Prestations
+   -------------------------------------------------------------------------- */
+.service-list { display: grid; grid-template-columns: 1fr; gap: 26px; align-items: stretch; }
+
+/* Colonne flex : la description absorbe l'espace restant, donc les boutons
+   de toutes les cartes d'une même ligne s'alignent sur le même axe. */
+.service-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* L'image occupe toute la largeur de la carte, comme le texte en dessous. */
+.service-visual {
+    position: relative;
+    width: 100%;
+    margin: 0 0 14px;
+    aspect-ratio: 3 / 4;
+    border: 2px solid var(--border-strong);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 0 26px rgba(105, 230, 75, .16);
+}
+.service-visual img { width: 100%; height: 100%; object-fit: cover; }
+
+.service-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 14px;
+    text-align: left;
+    margin-bottom: 12px;
+}
+.service-name {
+    font-family: var(--font-accent);
+    font-size: 14px;
+    letter-spacing: .06em;
+    line-height: 1.35;
+}
+.service-includes { display: block; color: var(--muted); font-size: 12px; letter-spacing: .04em; }
+.service-price {
+    font-family: var(--font-accent);
+    font-size: 20px;
+    color: var(--white);
+    white-space: nowrap;
+}
+.service-desc { text-align: left; font-size: 14px; color: var(--muted); margin: 0 0 14px; flex: 1; }
+
+/* Offre de dernière minute : bandeau à part, tarif doublé */
+.late-offer {
+    position: relative;
+    border: 2px solid var(--yellow);
+    border-radius: var(--radius);
+    overflow: hidden;
+    text-align: center;
+    padding: 0 0 22px;
+}
+.late-offer-visual { aspect-ratio: 16 / 9; overflow: hidden; }
+.late-offer-visual img { width: 100%; height: 100%; object-fit: cover; }
+.late-offer-body { padding: 16px 18px 0; }
+.late-offer-title { font-family: var(--font-accent); font-size: 16px; color: var(--yellow); }
+.late-offer-multiplier { font-family: var(--font-accent); font-size: 22px; color: var(--yellow); }
+
+/* --------------------------------------------------------------------------
+   Boutique — Only Sayajin Store (accent orange)
+   -------------------------------------------------------------------------- */
+.shop-notice {
+    display: block;
+    text-align: center;
+    font-family: var(--font-accent);
+    font-size: 14px;
+    letter-spacing: .1em;
+    color: var(--orange);
+    margin: 20px 0 32px;
+}
+.shop-group { margin-bottom: 42px; text-align: center; }
+.shop-group-title { color: var(--green); margin-bottom: 4px; }
+.shop-group-price { font-family: var(--font-accent); font-size: 32px; color: var(--green); margin-bottom: 18px; }
+.shop-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.shop-item { border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+.shop-item img { width: 100%; aspect-ratio: 1; object-fit: cover; }
+.shop-item-name { font-family: var(--font-accent); font-size: 12px; padding: 10px 8px; }
+
+/* --------------------------------------------------------------------------
+   Galerie — carrousel (la note de développement écarte la mosaïque)
+   -------------------------------------------------------------------------- */
+.carousel {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding: 4px 0 10px;
+}
+.carousel::-webkit-scrollbar { display: none; }
+.carousel figure {
+    flex: 0 0 78%;
+    scroll-snap-align: center;
+    margin: 0;
+    aspect-ratio: 3 / 4;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    cursor: zoom-in;
+}
+.carousel img { width: 100%; height: 100%; object-fit: cover; }
+
+.carousel-nav { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 16px; }
+.carousel-nav button {
+    width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    color: var(--green);
+}
+.carousel-nav button:hover { box-shadow: 0 0 18px var(--green-glow); }
+.carousel-count { font-family: var(--font-accent); font-size: 14px; color: var(--green); }
+
+/* Visionneuse plein écran : ouvrir et zoomer sur une photo */
+.lightbox {
+    position: fixed; inset: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    gap: 12px; padding: 20px;
+    background: rgba(3, 3, 4, .95);
+    backdrop-filter: blur(8px);
+    cursor: zoom-out;
+}
+.lightbox-figure { margin: 0; cursor: default; max-width: min(1100px, 94vw); text-align: center; }
+.lightbox-figure img {
+    max-width: 100%; max-height: 76vh; object-fit: contain;
+    border: 1px solid var(--border-strong); border-radius: var(--radius);
+    box-shadow: 0 0 60px rgba(105, 230, 75, .18);
+}
+.lightbox-figure figcaption { margin-top: 12px; font-size: 14px; color: var(--muted); }
+.lightbox-close, .lightbox-nav-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 46px; height: 46px;
+    background: rgba(12, 14, 11, .8);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    color: var(--green);
+}
+.lightbox-close { position: absolute; top: 18px; right: 18px; }
+
+/* --------------------------------------------------------------------------
+   FAQ
+   -------------------------------------------------------------------------- */
+.faq-list { display: flex; flex-direction: column; gap: 2px; }
+.faq-item {
+    border-bottom: 1px solid var(--border);
+    padding: 16px 0;
+
+    /* Apparition l'une après l'autre à l'entrée dans le champ de vision.
+       Le décalage est plafonné à huit rangs : au-delà, la dernière question
+       attendrait près d'une seconde, ce qui devient une attente et non plus
+       un effet. */
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+        opacity .5s ease calc(min(var(--i, 0), 8) * 90ms),
+        transform .5s cubic-bezier(.22, .61, .36, 1) calc(min(var(--i, 0), 8) * 90ms);
+}
+.faq-item.is-in { opacity: 1; transform: none; }
+
+/* La dernière question n'a rien à séparer d'elle : la bordure dessinerait un
+   trait flottant sous le dernier élément de la carte. */
+.faq-item:last-child { border-bottom: none; }
+.faq-question {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 14px;
+    width: 100%; background: transparent; border: none; padding: 0;
+    color: var(--green); text-align: left;
+    font-family: var(--font-accent); font-size: 14px; letter-spacing: .02em;
+    text-transform: none;
+}
+/* Dépliage fluide.
+
+   `grid-template-rows: 0fr → 1fr` est la seule technique qui anime vraiment
+   vers une hauteur automatique. Un max-height obligerait à deviner une valeur :
+   trop basse elle tronque le texte, trop haute la transition part en retard et
+   paraît saccadée sur les réponses courtes. */
+.faq-answer-wrap {
+    display: grid;
+    grid-template-rows: 0fr;
+    /* min-height: 0 sur l'enfant, sinon la grille refuse de descendre à zéro */
+    transition: grid-template-rows .28s ease, opacity .22s ease;
+    opacity: 0;
+}
+.faq-item.is-open .faq-answer-wrap {
+    grid-template-rows: 1fr;
+    opacity: 1;
+}
+.faq-answer {
+    color: var(--muted);
+    font-size: 14px;
+    min-height: 0;
+    overflow: hidden;
+    margin: 0;
+    padding-top: 10px;
+}
+.faq-toggle { flex: 0 0 auto; transition: transform .22s ease; }
+.faq-item.is-open .faq-toggle { transform: rotate(45deg); }
+
+/* --------------------------------------------------------------------------
+   Contact
+   -------------------------------------------------------------------------- */
+.contact-list { display: flex; flex-direction: column; gap: 18px; }
+.contact-row { display: flex; align-items: center; gap: 16px; }
+.contact-icon {
+    width: 52px; height: 52px; flex: 0 0 52px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 14px;
+}
+.contact-value { font-family: var(--font-accent); font-size: 14px; text-decoration: underline; text-transform: none; }
+
+/* --------------------------------------------------------------------------
+   Desktop — cohérence avec le mobile, sans le dénaturer
+   -------------------------------------------------------------------------- */
+@media (min-width: 768px) {
+    .service-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px; }
+    .shop-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .carousel figure { flex-basis: 38%; }
+}
+
+@media (min-width: 1024px) {
+    .service-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .carousel figure { flex-basis: 26%; }
+    .hero { align-items: center; }
+    .hero-inner { max-width: 720px; margin: 0 auto; }
+    .contact-list { max-width: 620px; margin: 0 auto; }
+}
+
+/* ==========================================================================
+   BACK OFFICE
+   Même charte que le site, dans une disposition dense adaptée à un usage
+   quotidien : le barbier y passe plusieurs fois par jour.
+   ========================================================================== */
+.admin { background: var(--black); min-height: 100vh; }
+
+/* --------------------------------------------------------------------------
+   Barre du haut, sur toute la largeur : logo à gauche, compte à droite
+   -------------------------------------------------------------------------- */
+.admin-topbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 60;
+    height: var(--topbar-h);
+    display: flex; align-items: center; gap: 14px;
+    padding: 0 16px;
+    background: rgba(6, 8, 6, .96);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+}
+.admin-burger { flex: 0 0 auto; }
+
+.admin-logo {
+    display: flex; align-items: center;
+    margin-right: auto;
+    height: 100%;
+    padding: 8px 0;
+    min-width: 0;
+}
+.admin-logo img {
+    height: 100%; width: auto;
+    max-width: 46vw;
+    object-fit: contain;
+    object-position: left center;
+}
+
+/* Menu du compte */
+.admin-account { position: relative; flex: 0 0 auto; }
+.admin-account-btn {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 10px 6px 6px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    color: var(--white);
+    transition: border-color .18s ease;
+}
+.admin-account-btn:hover { border-color: var(--border-strong); }
+
+.admin-avatar {
+    width: 32px; height: 32px; flex: 0 0 32px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    background: rgba(105, 230, 75, .16);
+    border: 1px solid var(--border-strong);
+    color: var(--green);
+    font-family: var(--font-accent);
+    font-size: 14px;
+}
+.admin-account-name { font-size: 14px; }
+/* Chevron tourné vers le bas : l'icône « right » sert aussi ailleurs */
+.admin-account-caret { color: var(--muted); transform: rotate(90deg); transition: transform .2s ease; }
+.admin-account-btn[aria-expanded="true"] .admin-account-caret { transform: rotate(-90deg); }
+
+.admin-dropdown {
+    position: absolute;
+    top: calc(100% + 8px); right: 0;
+    min-width: 208px;
+    padding: 6px;
+    background: rgba(10, 13, 10, .98);
+    backdrop-filter: blur(14px);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 16px 44px rgba(0, 0, 0, .6);
+}
+.admin-dropdown-link {
+    width: 100%;
+    display: flex; align-items: center; gap: 11px;
+    padding: 10px 12px;
+    background: transparent;
+    border: none;
+    border-radius: 5px;
+    color: var(--muted);
+    font-family: var(--font-body);
+    font-size: 14px;
+    text-align: left;
+}
+.admin-dropdown-link:hover { background: rgba(105, 230, 75, .10); color: var(--white); }
+.admin-dropdown-link--danger { color: var(--danger); }
+.admin-dropdown-link--danger:hover { background: rgba(255, 90, 90, .10); }
+
+.admin-backdrop {
+    position: fixed; inset: 0; z-index: 45;
+    background: rgba(3, 3, 4, .7);
+}
+
+/* --------------------------------------------------------------------------
+   Barre latérale, sous la barre du haut
+   -------------------------------------------------------------------------- */
+.admin-sidebar {
+    position: fixed;
+    top: var(--topbar-h); bottom: 0; left: 0;
+    z-index: 50;
+    width: 254px;
+    padding: 16px 12px;
+    background: #080A08;
+    border-right: 1px solid var(--border);
+    /* Hors écran sur mobile, révélée par le bouton de la barre du haut */
+    transform: translateX(-100%);
+    transition: transform .26s ease;
+    /* Défilement possible sur écran court, mais barre masquée */
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.admin-sidebar::-webkit-scrollbar { display: none; }
+.admin-sidebar.is-open { transform: none; }
+
+.admin-group + .admin-group {
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+}
+.admin-group-label {
+    font-family: var(--font-accent);
+    font-size: 10px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin: 0 0 10px 10px;
+}
+
+.admin-link {
+    width: 100%;
+    display: flex; align-items: center; gap: 11px;
+    padding: 10px 11px;
+    margin-bottom: 2px;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--muted);
+    font-family: var(--font-body);
+    font-size: 14px;
+    text-align: left;
+    transition: background .15s ease, color .15s ease;
+}
+.admin-link:hover { background: rgba(105, 230, 75, .08); color: var(--white); }
+.admin-link svg { flex: 0 0 auto; }
+
+/* L'écran courant : fond vert plein, comme les onglets actifs du site */
+.admin-link.is-active {
+    background: var(--green);
+    color: #04120A;
+    box-shadow: 0 0 18px rgba(105, 230, 75, .28);
+}
+
+/* --------------------------------------------------------------------------
+   Zone de contenu
+   -------------------------------------------------------------------------- */
+.admin-page { padding: calc(var(--topbar-h) + 22px) 0 60px; }
+.admin-content { max-width: 1100px; margin: 0 auto; padding: 0 16px; }
+
+.admin-flash {
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+.admin-flash--ok { background: rgba(105, 230, 75, .12); color: var(--green); border: 1px solid var(--border-strong); }
+.admin-flash--ko { background: rgba(255, 90, 90, .10); color: var(--danger); border: 1px solid var(--danger-border); }
+
+.admin-title { font-size: clamp(26px, 6vw, 34px); margin: 0 0 6px; }
+.admin-title::after {
+    content: ""; display: block; width: 46px; height: 3px;
+    background: var(--green); box-shadow: 0 0 14px var(--green-glow);
+    margin-top: 10px;
+}
+.admin-sub { color: var(--muted); font-size: 14px; margin: 0 0 26px; max-width: 62ch; }
+
+.admin-card { padding: 20px 18px; margin-bottom: 20px; }
+.admin-card-title {
+    font-family: var(--font-accent); font-size: 13px;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--green);
+    margin: 0 0 16px;
+}
+
+/* Cartes de chiffres du tableau de bord */
+.kpi-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 24px; }
+.kpi { padding: 16px; }
+.kpi-label {
+    font-family: var(--font-accent); font-size: 11px;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--green);
+    margin: 0 0 8px;
+}
+.kpi-value { font-family: var(--font-accent); font-size: 28px; margin: 0; }
+.kpi-note { font-size: 12px; color: var(--muted); margin: 4px 0 0; }
+
+/* Listes de lignes : rendez-vous, clients, ventes */
+.row-list { display: flex; flex-direction: column; gap: 1px; }
+.row-item {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+    /* Empêche un contenu large — bande de créneaux, note longue — d'étirer
+       toute la liste et de provoquer un défilement horizontal de la page. */
+    min-width: 0;
+}
+.row-item > * { min-width: 0; }
+.row-item:last-child { border-bottom: none; }
+.row-main { flex: 1 1 220px; min-width: 0; }
+.row-title { font-family: var(--font-accent); font-size: 14px; margin: 0 0 4px; }
+.row-meta { font-size: 13px; color: var(--muted); margin: 0; }
+.row-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.admin-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.field-row { display: grid; grid-template-columns: 1fr; gap: 12px; }
+
+/* Calendrier du mois : la couleur indique la charge de la journée */
+.month-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.month-cell {
+    aspect-ratio: 1; border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: 12px;
+}
+.month-cell.is-closed { opacity: .3; }
+.month-bar { width: 70%; height: 3px; background: var(--border); border-radius: 2px; margin-top: 5px; overflow: hidden; }
+.month-bar span { display: block; height: 100%; background: var(--green); }
+
+/* Vignettes du back office */
+.thumb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.thumb {
+    position: relative; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    overflow: hidden; background: var(--surface-solid);
+}
+.thumb img { width: 100%; aspect-ratio: 1; object-fit: cover; }
+.thumb.is-hidden { opacity: .45; }
+.thumb-tools {
+    position: absolute; top: 6px; right: 6px;
+    display: flex; gap: 4px;
+    background: rgba(5, 5, 7, .8); border-radius: var(--radius-sm); padding: 3px;
+}
+.btn-icon {
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    background: transparent; border: none; color: var(--green); border-radius: 4px;
+}
+.btn-icon:hover { background: rgba(105, 230, 75, .16); }
+.btn-icon--danger { color: var(--danger); }
+
+.table-scroll { overflow-x: auto; }
+table.admin-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.admin-table th {
+    text-align: left; padding: 10px 12px;
+    font-family: var(--font-accent); font-size: 11px;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--green);
+    border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+.admin-table td { padding: 12px; border-bottom: 1px solid var(--border); }
+.admin-table tr:last-child td { border-bottom: none; }
+
+.empty-state { text-align: center; padding: 34px 18px; color: var(--muted); }
+
+@media (min-width: 768px) {
+    .kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .field-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .admin-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1024px) {
+    /* La barre latérale devient permanente ; le contenu se décale d'autant.
+       La barre du haut reste, elle porte le logo et le menu du compte. */
+    .admin-burger, .admin-backdrop { display: none; }
+    .admin-sidebar { transform: none; }
+    .admin-page { padding-left: 254px; }
+    .admin-content { padding: 0 28px; }
+    .kpi-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}
+
+/* Bloc de compte dans le menu déroulant : séparé des pages du site, car
+   ces liens sont d'une autre nature — ils dépendent de qui est connecté. */
+.menu-account {
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.menu-account-link {
+    display: block;
+    width: 100%;
+    padding: 9px 0;
+    background: transparent;
+    border: none;
+    font-family: var(--font-body);
+    font-size: 15px;
+    color: var(--muted);
+    text-align: center;
+}
+.menu-account-link:hover { color: var(--white); }
+/* L'accès au back office se distingue : ce n'est pas une page du site */
+.menu-account-link.is-admin { color: var(--yellow); }
+.menu-account-link.is-admin:hover { text-shadow: 0 0 12px rgba(255, 213, 42, .6); }
+
+/* ==========================================================================
+   ÉCRANS D'AUTHENTIFICATION
+   ========================================================================== */
+.auth-shell {
+    position: relative;
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 18px;
+    overflow: hidden;
+}
+/* Aura verte diffuse, seul décor de ces écrans */
+.auth-aura {
+    position: absolute;
+    left: 50%; top: 42%;
+    width: min(760px, 130vw); aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(105, 230, 75, .16), transparent 62%);
+    pointer-events: none;
+}
+
+/* Visuel de fond, repris de l'accueil. Assombri à 82 % : sur un écran de
+   saisie, l'image doit poser l'ambiance sans gêner la lecture des champs. */
+.auth-media { position: absolute; inset: 0; z-index: 0; }
+.auth-media img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    object-position: 50% 30%;
+}
+.auth-media::after {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+        radial-gradient(circle at 50% 26%, rgba(255, 166, 40, .14), transparent 55%),
+        linear-gradient(to bottom,
+            rgba(5, 5, 7, .90) 0%,
+            rgba(5, 5, 7, .80) 34%,
+            rgba(5, 5, 7, .93) 72%,
+            rgba(5, 5, 7, .99) 100%);
+}
+
+/* Avec un visuel, l'aura ferait doublon : elle s'efface. */
+.auth-shell.has-media .auth-aura { opacity: .35; }
+
+.auth-box { position: relative; z-index: 1; width: 100%; max-width: 430px; }
+
+.auth-brand { display: block; text-align: center; margin-bottom: 26px; }
+.auth-brand img {
+    /* Ici le logo est l'élément principal : il se cale sur la largeur de la
+       carte plutôt que sur une hauteur. */
+    width: min(300px, 76%); height: auto; margin: 0 auto;
+    filter: drop-shadow(0 2px 10px rgba(0, 0, 0, .8));
+}
+
+/* Carte translucide : l'image du bandeau reste visible à travers le formulaire.
+   Le flou d'arrière-plan fait le travail que ferait un fond opaque — il casse
+   les détails de la photo sans la masquer, ce qui garde les champs lisibles. */
+.auth-card {
+    padding: 30px 26px 28px;
+    position: relative;
+    overflow: hidden;
+    background: rgba(10, 12, 10, .26);
+    backdrop-filter: blur(18px) saturate(115%);
+    -webkit-backdrop-filter: blur(18px) saturate(115%);
+    border-color: var(--border-strong);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, .55);
+}
+
+/* Firefox ancien et quelques navigateurs mobiles ignorent backdrop-filter :
+   sans repli, le formulaire se poserait à nu sur la photo. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .auth-card { background: rgba(8, 10, 8, .88); }
+}
+
+/* Champs assortis à la carte : un fond sombre plein trancherait avec elle. */
+.auth-card input[type="text"],
+.auth-card input[type="email"],
+.auth-card input[type="password"],
+.auth-card input[type="tel"] {
+    background: rgba(255, 255, 255, .07);
+    border-color: rgba(255, 255, 255, .18);
+}
+.auth-card input:focus {
+    background: rgba(255, 255, 255, .11);
+    border-color: var(--green);
+}
+
+/* Bouton secondaire : sans fond propre, il disparaîtrait sur la carte claire. */
+.auth-card .btn--ghost { background: rgba(5, 5, 7, .35); }
+/* Liseré néon en tête de carte, signature de la charte */
+.auth-card::before {
+    content: "";
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--green), transparent);
+}
+
+.auth-heading { font-size: clamp(26px, 7vw, 34px); margin: 0 0 8px; }
+.auth-lede { color: var(--muted); font-size: 14px; line-height: 1.6; margin: 0 0 24px; }
+
+.auth-status {
+    background: rgba(105, 230, 75, .12);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    color: var(--green);
+    font-size: 13px;
+    padding: 11px 14px;
+    margin: 0 0 20px;
+}
+
+.auth-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap; margin-top: 18px;
+}
+.auth-link { color: var(--green); font-size: 13px; }
+.auth-link:hover { text-decoration: underline; }
+
+
+.auth-back { text-align: center; margin: 22px 0 0; font-size: 13px; }
+.auth-back a { color: var(--muted); }
+.auth-back a:hover { color: var(--green); }
+
+.auth-separator {
+    display: flex; align-items: center; gap: 14px;
+    margin: 24px 0 20px;
+    font-family: var(--font-accent);
+    font-size: 11px; letter-spacing: .2em; text-transform: uppercase;
+    color: var(--faint);
+}
+.auth-separator::before, .auth-separator::after {
+    content: ""; flex: 1; height: 1px; background: var(--border);
+}
+
+/* ==========================================================================
+   NOTIFICATIONS FLOTTANTES
+   ========================================================================== */
+.toast-stack {
+    position: fixed;
+    top: calc(var(--topbar-h) + 12px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 90;
+    width: min(460px, calc(100vw - 32px));
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    /* Le conteneur ne doit pas intercepter les clics ; seules les cartes le font. */
+    pointer-events: none;
+}
+
+.toast {
+    pointer-events: auto;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-strong);
+    background: rgba(10, 14, 10, .96);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 14px 40px rgba(0, 0, 0, .6);
+    font-size: 14px;
+    line-height: 1.5;
+    cursor: pointer;
+}
+.toast--success { border-color: var(--border-strong); color: var(--green); }
+.toast--error   { border-color: var(--danger-border); color: var(--danger); }
+
+.toast svg { flex: 0 0 auto; margin-top: 2px; }
+.toast-text { flex: 1; color: var(--white); }
+
+.toast-close {
+    flex: 0 0 auto;
+    background: transparent;
+    border: none;
+    padding: 0;
+    color: currentColor;
+    opacity: .6;
+}
+.toast-close:hover { opacity: 1; }
+
+/* Entrée par le haut, sortie par la droite : deux mouvements distincts pour
+   qu'on distingue l'apparition de la disparition. */
+.toast-enter-active { transition: opacity .25s ease, transform .25s ease; }
+.toast-leave-active { transition: opacity .2s ease, transform .2s ease; position: absolute; }
+.toast-enter-from { opacity: 0; transform: translateY(-12px); }
+.toast-leave-to   { opacity: 0; transform: translateX(24px); }
+.toast-move { transition: transform .25s ease; }
+
+@media (prefers-reduced-motion: reduce) {
+    .toast-enter-active, .toast-leave-active, .toast-move { transition: none; }
+}
+
+/* ==========================================================================
+   ÉCRAN CONTENU
+   ========================================================================== */
+.cms-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.cms-tabs::-webkit-scrollbar { display: none; }
+
+.cms-tab {
+    flex: 0 0 auto;
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 15px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--muted);
+    font-family: var(--font-accent);
+    font-size: 12px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transition: border-color .15s ease, color .15s ease;
+}
+.cms-tab:hover { border-color: var(--border-strong); color: var(--white); }
+.cms-tab.is-active {
+    background: var(--green);
+    border-color: var(--green);
+    color: #04120A;
+}
+.cms-tab-count {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 20px; height: 20px; padding: 0 6px;
+    border-radius: var(--radius-pill);
+    background: rgba(255, 255, 255, .12);
+    font-size: 11px;
+}
+.cms-tab.is-active .cms-tab-count { background: rgba(4, 18, 10, .18); }
+
+/* Sommaire à gauche, panneau à droite */
+.cms-layout { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: start; }
+
+.cms-nav {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-bottom: 4px;
+}
+.cms-nav::-webkit-scrollbar { display: none; }
+
+.cms-nav-item {
+    flex: 0 0 auto;
+    display: flex; align-items: center; gap: 8px;
+    padding: 9px 13px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--muted);
+    font-family: var(--font-body);
+    font-size: 13px;
+    text-align: left;
+    white-space: nowrap;
+}
+.cms-nav-item:hover { color: var(--white); border-color: var(--border-strong); }
+.cms-nav-item.is-active {
+    border-color: var(--green);
+    color: var(--green);
+    background: rgba(105, 230, 75, .08);
+}
+
+/* Pastille de modifications en attente sur une section */
+.cms-nav-dot {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 18px; height: 18px; padding: 0 5px;
+    border-radius: var(--radius-pill);
+    background: var(--yellow);
+    color: #1A1200;
+    font-family: var(--font-accent);
+    font-size: 10px;
+}
+
+.cms-panel { margin-bottom: 0; }
+
+/* Aperçu et sélecteur d'image côte à côte */
+.cms-image { display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap; }
+.cms-image .thumb { flex: 0 0 120px; width: 120px; }
+.cms-image .thumb img { aspect-ratio: 4 / 3; object-fit: contain; background: var(--surface-solid); }
+.thumb--empty {
+    aspect-ratio: 4 / 3;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--faint);
+}
+.cms-image-actions { flex: 1 1 220px; display: flex; flex-direction: column; gap: 10px; }
+
+/* Barre d'enregistrement : n'apparaît qu'en cas de modification, ce qui
+   évite un bandeau permanent dont on cesse vite de voir l'utilité. */
+.cms-savebar {
+    position: sticky;
+    bottom: 0;
+    z-index: 30;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 14px; flex-wrap: wrap;
+    margin-top: 18px;
+    padding: 14px 16px;
+    background: rgba(8, 12, 8, .96);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, .5);
+}
+.cms-savebar-text { font-size: 13px; color: var(--yellow); }
+
+@media (min-width: 900px) {
+    /* Le sommaire passe en colonne fixe à gauche du panneau */
+    .cms-layout { grid-template-columns: 232px minmax(0, 1fr); gap: 20px; }
+    .cms-nav {
+        flex-direction: column;
+        overflow: visible;
+        position: sticky;
+        top: calc(var(--topbar-h) + 16px);
+    }
+    .cms-nav-item { width: 100%; justify-content: space-between; }
+}
+
+/* Écrans étroits : le logo laisse la place au bouton du menu et au compte. */
+@media (max-width: 420px) {
+    /* La hauteur reste pilotée par la barre ; on limite seulement la largeur
+       pour laisser la place au bouton du menu et au compte. */
+    .brand img      { max-width: 52vw; }
+    .admin-logo img { max-width: 40vw; }
+    .auth-brand img { width: min(240px, 84%); }
+    .admin-account-name { display: none; }
+}
+
+/* ==========================================================================
+   CHARGEMENT PROGRESSIF DES IMAGES
+   ========================================================================== */
+.smart-img {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--surface-solid);
+}
+.smart-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Aperçu : 24 px étirés, le flou masque la pixellisation */
+.smart-img-lqip {
+    position: absolute; inset: 0;
+    filter: blur(14px);
+    /* Léger agrandissement : le flou déborderait sinon sur les bords */
+    transform: scale(1.08);
+}
+
+.smart-img-full {
+    position: relative;
+    opacity: 0;
+    transition: opacity .45s ease;
+}
+.smart-img.is-loaded .smart-img-full { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+    .smart-img-full { transition: none; }
+}
+
+
+
+/* En-têtes de jours et sélection dans le calendrier du back office */
+.month-head {
+    font-family: var(--font-accent);
+    font-size: 10px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--faint);
+    text-align: center;
+    padding-bottom: 4px;
+}
+/* Cases vides précédant le 1er du mois */
+.month-blank { aspect-ratio: 1; }
+
+.month-cell {
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    transition: border-color .15s ease, background .15s ease;
+}
+.month-cell:hover:not(.is-closed) {
+    border-color: var(--border-strong);
+    background: rgba(105, 230, 75, .07);
+}
+.month-cell.is-selected {
+    border-color: var(--green);
+    background: rgba(105, 230, 75, .16);
+    color: var(--green);
+    box-shadow: 0 0 14px rgba(105, 230, 75, .22);
+}
+
+.day-filter {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 14px; flex-wrap: wrap;
+    margin: 0 0 18px;
+    padding: 11px 14px;
+    background: rgba(105, 230, 75, .10);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    color: var(--green);
+}
+
+/* ==========================================================================
+   ÉDITEUR ENRICHI ET RENDU DU CONTENU
+   ========================================================================== */
+.rte {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-solid);
+    overflow: hidden;
+}
+
+.rte-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    padding: 6px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255, 255, 255, .03);
+}
+.rte-tool {
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 5px;
+    color: var(--muted);
+}
+.rte-tool:hover { background: rgba(105, 230, 75, .12); color: var(--green); }
+
+.rte-editor {
+    min-height: 260px;
+    padding: 16px;
+    outline: none;
+    font-size: 15px;
+    line-height: 1.7;
+}
+.rte-editor:focus { box-shadow: inset 0 0 0 2px rgba(105, 230, 75, .22); }
+
+.rte-link {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    padding: 10px;
+    border-top: 1px solid var(--border);
+    background: rgba(255, 255, 255, .03);
+}
+.rte-link input { flex: 1 1 200px; padding: 9px 12px; }
+
+/* Rendu du contenu, dans l'éditeur comme sur le site : les deux partagent
+   ces règles pour que l'aperçu corresponde au résultat. */
+.prose { color: var(--muted); font-size: 15px; line-height: 1.75; }
+.prose > :first-child { margin-top: 0; }
+.prose > :last-child { margin-bottom: 0; }
+.prose p { margin: 0 0 16px; }
+.prose h2, .prose h3, .prose h4 {
+    font-family: var(--font-title);
+    text-transform: uppercase;
+    color: var(--white);
+    margin: 28px 0 12px;
+}
+.prose h2 { font-size: 26px; }
+.prose h3 { font-size: 21px; }
+.prose h4 { font-size: 18px; }
+.prose strong, .prose b { color: var(--white); font-weight: 700; }
+.prose ul, .prose ol { margin: 0 0 16px; padding-left: 22px; }
+.prose li { margin-bottom: 6px; }
+.prose ul li::marker { color: var(--green); }
+.prose a { color: var(--green); text-decoration: underline; }
+.prose blockquote {
+    margin: 0 0 16px;
+    padding: 4px 0 4px 16px;
+    border-left: 3px solid var(--green);
+    color: var(--white);
+    font-style: italic;
+}
+
+/* Séparateurs et état actif de la barre d'outils */
+.rte-sep {
+    width: 1px;
+    align-self: stretch;
+    margin: 4px 4px;
+    background: var(--border);
+}
+.rte-tool.is-active {
+    background: var(--green);
+    color: #04120A;
+}
+.rte-tool.is-active:hover { background: var(--green); }
+
+/* Trait de séparation dans le contenu */
+.prose hr {
+    border: none;
+    height: 1px;
+    background: var(--border-strong);
+    margin: 26px 0;
+}
+.prose u { text-decoration: underline; }
+.prose s, .prose strike, .prose del { text-decoration: line-through; opacity: .75; }
+
+/* ==========================================================================
+   COMMENT ÇA MARCHE
+   ========================================================================== */
+.steps-layout { display: grid; grid-template-columns: 1fr; gap: 16px; }
+.steps { display: grid; grid-template-columns: 1fr; gap: 14px; }
+
+/* Contenu centré sur les deux axes : justify-content répartit l'espace restant
+   au-dessus et au-dessous, donc une carte au texte court n'a pas son contenu
+   collé en haut. */
+.step {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(10, 12, 10, .90);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px 24px;
+    overflow: hidden;
+}
+/* Liseré néon en tête, comme les autres cartes de la charte */
+.step::before {
+    content: "";
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--green), transparent);
+    opacity: .45;
+}
+
+.step-number {
+    font-family: var(--font-accent);
+    font-size: 11px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--green);
+    opacity: .85;
+    margin-bottom: 16px;
+}
+
+.step-icon {
+    width: 58px; height: 58px;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--border-strong);
+    border-radius: 50%;
+    background: rgba(105, 230, 75, .07);
+    color: var(--green);
+    margin-bottom: 18px;
+}
+.step-icon svg { filter: drop-shadow(0 0 10px var(--green-glow)); }
+
+.step h3 {
+    font-family: var(--font-title);
+    text-transform: uppercase;
+    font-size: 21px;
+    margin: 0 0 10px;
+}
+/* Pas de flex: 1 ici — il pousserait le texte vers le bas et casserait le
+   centrage vertical obtenu par justify-content. */
+.step p {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.65;
+    margin: 0;
+    max-width: 30ch;
+}
+
+/* --------------------------------------------------------------------------
+   Carte du prochain créneau
+   -------------------------------------------------------------------------- */
+.slot-card { padding: 24px 22px; text-align: center; align-self: start; }
+
+.slot-eyebrow {
+    font-family: var(--font-accent);
+    font-size: 11px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--green);
+    margin: 0 0 14px;
+}
+.slot-date {
+    font-family: var(--font-title);
+    text-transform: uppercase;
+    font-size: 20px;
+    margin: 0 0 2px;
+}
+.slot-time {
+    font-family: var(--font-accent);
+    font-size: 34px;
+    color: var(--yellow);
+    margin: 0 0 6px;
+}
+.slot-meta { font-size: 13px; color: var(--muted); margin: 0 0 18px; }
+
+.slot-price {
+    display: flex; justify-content: space-between; align-items: baseline;
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: var(--muted);
+}
+.slot-price strong { font-family: var(--font-accent); font-size: 22px; color: var(--white); }
+
+.slot-note { font-size: 11px; color: var(--faint); margin: 12px 0 0; line-height: 1.5; }
+
+/* --------------------------------------------------------------------------
+   Apparition en cascade
+   Le décalage est plafonné : au-delà, la dernière carte se ferait attendre.
+   -------------------------------------------------------------------------- */
+/* .step-reveal : titre et introduction, qui n'ont pas de style de carte mais
+   partagent la même apparition. */
+.step, .slot-card, .step-reveal {
+    /* Retard propre à la carte, réutilisé par son contenu : sans cette
+       variable, chaque ligne interne devrait recalculer le décalage du bloc. */
+    --base: calc(min(var(--i, 0), 4) * 130ms);
+
+    opacity: 0;
+    transform: translateY(20px);
+    transition:
+        opacity .55s ease var(--base),
+        transform .55s cubic-bezier(.22, .61, .36, 1) var(--base);
+}
+.step.is-in, .slot-card.is-in, .step-reveal.is-in { opacity: 1; transform: none; }
+
+/* Seconde cascade, à l'intérieur des cartes : numéro, icône, titre puis texte
+   arrivent l'un après l'autre. La carte se dessine d'abord vide, puis se
+   remplit — c'est ce second temps qui donne l'impression de construction. */
+.step > *, .slot-card > * {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity .45s ease, transform .45s ease;
+}
+.step.is-in > *, .slot-card.is-in > * { opacity: 1; transform: none; }
+
+.step.is-in > *:nth-child(1),
+.slot-card.is-in > *:nth-child(1) { transition-delay: calc(var(--base) + 90ms); }
+.step.is-in > *:nth-child(2),
+.slot-card.is-in > *:nth-child(2) { transition-delay: calc(var(--base) + 180ms); }
+.step.is-in > *:nth-child(3),
+.slot-card.is-in > *:nth-child(3) { transition-delay: calc(var(--base) + 270ms); }
+.step.is-in > *:nth-child(4),
+.slot-card.is-in > *:nth-child(4) { transition-delay: calc(var(--base) + 360ms); }
+.step.is-in > *:nth-child(5),
+.slot-card.is-in > *:nth-child(5) { transition-delay: calc(var(--base) + 450ms); }
+.step.is-in > *:nth-child(6),
+.slot-card.is-in > *:nth-child(6) { transition-delay: calc(var(--base) + 540ms); }
+.step.is-in > *:nth-child(7),
+.slot-card.is-in > *:nth-child(7) { transition-delay: calc(var(--base) + 630ms); }
+.step.is-in > *:nth-child(8),
+.slot-card.is-in > *:nth-child(8) { transition-delay: calc(var(--base) + 720ms); }
+
+@media (prefers-reduced-motion: reduce) {
+    .step, .slot-card, .step-reveal,
+    .step > *, .slot-card > * { opacity: 1; transform: none; transition: none; }
+}
+
+@media (min-width: 768px) {
+    .steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1024px) {
+    /* Les trois étapes à gauche, la carte de créneau à droite */
+    .steps-layout { grid-template-columns: minmax(0, 2.4fr) minmax(0, 1fr); gap: 22px; }
+}
+
+/* Rendez-vous atteint depuis un lien d'email : signalé le temps qu'on le
+   repère, sans rester surligné indéfiniment. */
+.row-item.is-focused {
+    background: rgba(105, 230, 75, .08);
+    border-left: 3px solid var(--green);
+    padding-left: 12px;
+    border-radius: var(--radius-sm);
+    animation: focus-pulse 2.4s ease-out 2;
+}
+@keyframes focus-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(105, 230, 75, 0); }
+    30%      { box-shadow: 0 0 0 3px rgba(105, 230, 75, .28); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .row-item.is-focused { animation: none; }
+}
+
+
+
+/* Titre de page et action principale sur la même ligne. Le titre absorbe
+   l'espace restant, le bouton reste donc calé à droite. */
+.page-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
+.page-head h1 { margin: 0; flex: 1 1 auto; }
+
+/* Sous 560 px, le bouton passe sous le titre et prend toute la largeur :
+   à côté d'un titre long, il serait réduit à quelques pixels. */
+@media (max-width: 560px) {
+    .page-head .btn { width: 100%; }
+}
+
+/* Titre de carte et action sur la même ligne. */
+.card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+.card-head .admin-card-title { margin-bottom: 0; flex: 1 1 auto; }
+
+.account-locked {
+    margin: 0 0 24px;
+    padding: 13px 16px;
+    background: rgba(255, 90, 90, .10);
+    border: 1px solid var(--danger-border);
+    border-radius: var(--radius-sm);
+    color: var(--danger);
+    font-size: 14px;
+    line-height: 1.55;
+}
+
+/* Fidélité et dette, côte à côte en tête de l'espace client */
+.account-summary {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+.account-summary .admin-card { margin-bottom: 0; }
+
+/* Dette en cours : la bordure suffit à alerter, inutile d'ajouter un fond
+   rouge qui rendrait le montant moins lisible. */
+.account-summary .is-owing { border-color: var(--danger-border); }
+
+@media (min-width: 768px) {
+    .account-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Barre de filtres du planning : les champs s'étirent, le bouton reste
+   à sa taille et se cale en bas de ligne, au niveau des champs. */
+.filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+.filter-bar .field { flex: 1 1 180px; margin-bottom: 0; }
+.filter-bar .btn { flex: 0 0 auto; margin-bottom: 1px; }
+
+/* Contre-proposition : choix parmi les créneaux réellement libres */
+.counter-panel {
+    flex: 1 1 100%;
+    /* min-width: 0 obligatoire. Par défaut un élément flex vaut min-width: auto
+       et refuse de rétrécir sous la largeur de son contenu : la bande de jours,
+       plus large que la ligne, la faisait déborder au lieu de défiler. */
+    min-width: 0;
+    width: 100%;
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+}
+
+.counter-days {
+    display: flex;
+    gap: 6px;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+}
+.counter-days::-webkit-scrollbar { display: none; }
+.counter-days .badge { flex: 0 0 auto; cursor: pointer; }
+
+.counter-slots {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+    gap: 8px;
+    max-width: 100%;
+}
+/* Créneau retenu : fond plein, comme les onglets actifs du back office */
+.counter-slots .is-picked {
+    background: var(--green);
+    border-color: var(--green);
+    color: #04120A;
+}
+
+.counter-picked {
+    margin: 14px 0 0;
+    padding-left: 18px;
+    font-size: 13px;
+    color: var(--green);
+}
+.counter-picked li { margin-bottom: 4px; }
+
+/* ==========================================================================
+   STATISTIQUES
+   ========================================================================== */
+.stat-cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.kpi--shop { border-color: rgba(255, 107, 34, .3); }
+.kpi--shop .kpi-label { color: var(--orange); }
+
+/* Filtre du graphe */
+.chart-modes { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+.chart-modes button {
+    padding: 7px 13px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--muted);
+    font-size: 12px;
+}
+.chart-modes button:hover { border-color: var(--border-strong); color: var(--white); }
+.chart-modes button.is-active {
+    background: var(--green);
+    border-color: var(--green);
+    color: #04120A;
+}
+
+/* Colonne des graduations à gauche, zone de tracé à droite */
+.chart-wrap { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 8px; }
+
+.chart-scale {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 190px;
+    text-align: right;
+    font-size: 10px;
+    color: var(--faint);
+    /* Décalage d'une demi-ligne : chaque valeur se lit au niveau de son trait */
+    transform: translateY(-5px);
+}
+
+.chart-area { position: relative; height: 190px; }
+
+/* Lignes de repère, sous les barres */
+.chart-line {
+    position: absolute;
+    left: 0; right: 0;
+    height: 1px;
+    background: rgba(255, 255, 255, .07);
+    pointer-events: none;
+}
+
+/* Graphe en barres empilées, sans bibliothèque : des barres simples ne
+   justifient pas 300 Ko de dépendance. */
+.chart {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 100%;
+}
+.chart-col {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: stretch;
+    min-width: 0;
+}
+
+/* Montant au-dessus de sa barre */
+.chart-value {
+    text-align: center;
+    font-family: var(--font-accent);
+    font-size: 10px;
+    color: var(--white);
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+}
+.chart-stack {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    border-radius: 3px 3px 0 0;
+    overflow: hidden;
+    /* Une période à zéro doit rester visible comme un trait */
+    min-height: 2px;
+}
+.chart-services { background: var(--green); }
+/* La boutique est placée en haut : part la plus petite, elle disparaîtrait
+   écrasée sous les prestations. */
+.chart-shop { background: var(--orange); }
+
+.chart-axis {
+    display: flex;
+    gap: 6px;
+    margin: 8px 0 14px;
+    /* Aligné sur la zone de tracé, décalée par la colonne des graduations */
+    padding-left: 60px;
+}
+.chart-axis span {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+    font-size: 10px;
+    color: var(--faint);
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.chart-legend { display: flex; gap: 18px; font-size: 12px; color: var(--muted); }
+.chart-legend .dot {
+    display: inline-block;
+    width: 9px; height: 9px;
+    border-radius: 2px;
+    margin-right: 6px;
+}
+.dot--services { background: var(--green); }
+.dot--shop     { background: var(--orange); }
+
+/* Répartition par prestation */
+.rank {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 11px;
+}
+.rank-name { flex: 0 0 120px; font-size: 13px; }
+.rank-bar {
+    flex: 1;
+    min-width: 0;
+    height: 8px;
+    background: rgba(255, 255, 255, .06);
+    border-radius: 4px;
+    overflow: hidden;
+}
+.rank-bar span { display: block; height: 100%; background: var(--green); border-radius: 4px; }
+.rank-count { flex: 0 0 32px; text-align: right; font-size: 12px; color: var(--faint); }
+.rank-value {
+    flex: 0 0 78px;
+    text-align: right;
+    font-family: var(--font-accent);
+    font-size: 14px;
+}
+
+/* ==========================================================================
+   VENTES
+   ========================================================================== */
+.tile-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+}
+.tile {
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    text-align: center;
+    transition: border-color .15s ease, background .15s ease;
+}
+.tile:hover { border-color: var(--border-strong); }
+/* Bordure épaisse et fond teinté : seul repère indiquant sur quoi porte la
+   quantité saisie en dessous. */
+.tile.is-picked {
+    border: 2px solid var(--green);
+    background: rgba(105, 230, 75, .08);
+}
+.tile .smart-img { aspect-ratio: 1; }
+.tile-body { display: block; padding: 8px 6px; }
+.tile-name {
+    display: block;
+    font-family: var(--font-accent);
+    font-size: 11px;
+    color: var(--white);
+    line-height: 1.3;
+}
+.tile-price {
+    display: block;
+    font-family: var(--font-accent);
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 2px;
+}
+.tile.is-picked .tile-price { color: var(--green); }
+
+.sale-form { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 16px; }
+.sale-form .field { margin-bottom: 0; }
+
+/* Compteur : cibles larges, utilisables au pouce */
+.stepper {
+    display: flex;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+.stepper button {
+    flex: 1;
+    padding: 11px 0;
+    background: transparent;
+    border: none;
+    color: var(--green);
+    font-size: 18px;
+    line-height: 1;
+}
+.stepper button:hover { background: rgba(105, 230, 75, .10); }
+.stepper span {
+    flex: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    font-size: 15px;
+}
+
+
+.sale-day { margin-bottom: 18px; }
+.sale-day:last-of-type { margin-bottom: 0; }
+.sale-day-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin: 0;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-strong);
+    font-family: var(--font-accent);
+    font-size: 12px;
+    color: var(--yellow);
+}
+
+.sale-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin: 16px 0 0;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-strong);
+    font-size: 13px;
+    color: var(--muted);
+}
+.sale-total strong { font-family: var(--font-accent); font-size: 18px; color: var(--green); }
+
+@media (min-width: 768px) {
+    .stat-cards { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .tile-grid  { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .sale-form  { grid-template-columns: 130px 1fr 160px; align-items: end; }
+    .chart-area, .chart-scale { height: 240px; }
+}
