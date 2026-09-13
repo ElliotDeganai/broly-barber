@@ -11,7 +11,18 @@
 set -euo pipefail
 
 VERT='\033[0;32m'; ROUGE='\033[0;31m'; JAUNE='\033[0;33m'; NEUTRE='\033[0m'
-etape() { echo -e "\n${VERT}▸ $1${NEUTRE}"; }
+GRIS='\033[0;90m'
+
+DEPART=$SECONDS
+ETAPE_N=0
+TOTAL=5
+
+etape() {
+    ETAPE_N=$((ETAPE_N + 1))
+    local ecoule=$((SECONDS - DEPART))
+    printf "\n${VERT}▸ [%d/%d]${NEUTRE} %b%s%b ${GRIS}(%dm%02ds)${NEUTRE}\n" \
+        "$ETAPE_N" "$TOTAL" "$VERT" "$1" "$NEUTRE" $((ecoule / 60)) $((ecoule % 60))
+}
 alerte() { echo -e "${JAUNE}  ⚠ $1${NEUTRE}"; }
 abandon() { echo -e "${ROUGE}✗ $1${NEUTRE}" >&2; exit 1; }
 

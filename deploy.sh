@@ -12,7 +12,21 @@
 set -euo pipefail
 
 VERT='\033[0;32m'; ROUGE='\033[0;31m'; JAUNE='\033[0;33m'; NEUTRE='\033[0m'
-etape() { echo -e "\n${VERT}▸ $1${NEUTRE}"; }
+GRIS='\033[0;90m'
+
+# Décompte des étapes et temps écoulé.
+# TOTAL est fixe : l'étape de compilation s'affiche même quand elle est sautée,
+# sinon le décompte sauterait un numéro et laisserait croire à une anomalie.
+DEPART=$SECONDS
+ETAPE_N=0
+TOTAL=14
+
+etape() {
+    ETAPE_N=$((ETAPE_N + 1))
+    local ecoule=$((SECONDS - DEPART))
+    printf "\n${VERT}▸ [%d/%d]${NEUTRE} %b%s%b ${GRIS}(%dm%02ds)${NEUTRE}\n" \
+        "$ETAPE_N" "$TOTAL" "$VERT" "$1" "$NEUTRE" $((ecoule / 60)) $((ecoule % 60))
+}
 alerte() { echo -e "${JAUNE}  ⚠ $1${NEUTRE}"; }
 abandon() { echo -e "${ROUGE}✗ $1${NEUTRE}" >&2; relever; exit 1; }
 
@@ -135,9 +149,9 @@ etape "Dépendances PHP"
 composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
 # ---------------------------------------------------------------------------
-if [ "$BUILD" = 1 ]; then
 etape "Compilation des fichiers front"
 # ---------------------------------------------------------------------------
+if [ "$BUILD" = 1 ]; then
     command -v npm >/dev/null || abandon "npm introuvable.
   Installez Node, ou compilez en local puis :
       rsync -av public/build/ utilisateur@serveur:$RACINE/public/build/
