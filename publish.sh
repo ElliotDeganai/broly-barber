@@ -5,7 +5,8 @@
 # Vérifie que le dépôt est publiable, puis pousse sur GitHub.
 # Ne déploie rien : c'est deploy.sh, sur le serveur, qui s'en charge.
 #
-#   ./publish.sh "message de commit"
+#   ./publish.sh                      message déduit des fichiers modifiés
+#   ./publish.sh "message de commit"  message imposé
 #
 set -euo pipefail
 
@@ -17,7 +18,67 @@ abandon() { echo -e "${ROUGE}✗ $1${NEUTRE}" >&2; exit 1; }
 cd "$(dirname "$0")"
 
 MESSAGE="${1:-}"
-[ -z "$MESSAGE" ] && abandon "Message de commit manquant. Usage : ./publish.sh \"votre message\""
+
+# ---------------------------------------------------------------------------
+# Message déduit des fichiers modifiés
+#
+# Les chemins du projet portent leur domaine : resources/js/Pages/Admin est du
+# back office, app/Notifications des emails. On les regroupe plutôt que de
+# lister trente fichiers, et le détail part dans le corps du commit.
+# ---------------------------------------------------------------------------
+deduire_message() {
+    local fichiers domaines detail
+    fichiers=$(git status --porcelain --untracked-files=all | awk '{print $NF}')
+
+    domaines=$(echo "$fichiers" | awk '
+        $0 == "" { next }
+        /^resources\/js\/Pages\/Admin/     { d["back office"]++;        next }
+        /^resources\/js\/Pages\/Client/    { d["site public"]++;        next }
+        /^resources\/js\/Pages\/Auth/      { d["connexion"]++;          next }
+        /^resources\/js\/Pages\/Booking/   { d["tunnel de réservation"]++; next }
+        /^resources\/js\/(Layouts|Components)/ { d["composants"]++;      next }
+        /^resources\/css/                   { d["styles"]++;             next }
+        /^resources\/views/                 { d["gabarits"]++;           next }
+        /^app\/Notifications/               { d["notifications"]++;      next }
+        /^app\/Http\/Controllers\/Admin/   { d["back office"]++;        next }
+        /^app\/Http\/Controllers/          { d["contrôleurs"]++;        next }
+        /^app\/Services|^app\/Support/     { d["services"]++;           next }
+        /^app\/Models/                      { d["modèles"]++;            next }
+        /^app\/Console/                     { d["commandes"]++;          next }
+        /^database\/migrations/             { d["migrations"]++;         next }
+        /^database\/seeders/                { d["données initiales"]++;  next }
+        /^routes/                            { d["routes"]++;             next }
+        /^public/                            { d["fichiers publics"]++;   next }
+        /\.sh$|^README|\.md$/              { d["outillage"]++;          next }
+                                             { d["divers"]++ }
+        END {
+            n = 0
+            for (k in d) { liste[n++] = k " (" d[k] ")" }
+            # Tri par nombre décroissant : le domaine le plus touché en tête
+            for (i = 0; i < n; i++)
+                for (j = i + 1; j < n; j++) {
+                    gsub(/.*\(|\)/, "", a); a = liste[i]; b = liste[j]
+                    ai = substr(a, index(a, "(") + 1); ai = substr(ai, 1, length(ai) - 1)
+                    bi = substr(b, index(b, "(") + 1); bi = substr(bi, 1, length(bi) - 1)
+                    if (bi + 0 > ai + 0) { t = liste[i]; liste[i] = liste[j]; liste[j] = t }
+                }
+            out = ""
+            for (i = 0; i < n && i < 4; i++) out = out (out == "" ? "" : ", ") liste[i]
+            if (n > 4) out = out " et " (n - 4) " autre(s)"
+            print out
+        }')
+
+    local total ajouts suppressions
+    total=$(echo "$fichiers" | grep -c .)
+    ajouts=$(git status --porcelain --untracked-files=all | grep -c "^??" || true)
+    suppressions=$(git status --porcelain --untracked-files=all | grep -c "^ D\|^D " || true)
+
+    detail="Mise à jour — $domaines"
+
+    printf '%s\n\n%s fichier(s) : %s ajout(s), %s suppression(s).\n\n%s\n' \
+        "$detail" "$total" "$ajouts" "$suppressions" \
+        "$(git status --porcelain --untracked-files=all | sed 's/^/  /')"
+}
 
 # Sail ou PHP local, selon ce qui est disponible
 if [ -f vendor/bin/sail ] && docker compose ps 2>/dev/null | grep -q "Up"; then
@@ -98,6 +159,15 @@ read -rp "Publier ces modifications ? [o/N] " reponse
 [[ "$reponse" =~ ^[oO]$ ]] || abandon "Publication annulée."
 
 git add -A
+
+if [ -z "$MESSAGE" ]; then
+    MESSAGE=$(deduire_message)
+    echo
+    echo "Message déduit :"
+    echo "$MESSAGE" | head -3 | sed 's/^/  /'
+    echo
+fi
+
 git commit -m "$MESSAGE"
 git push origin "$(git rev-parse --abbrev-ref HEAD)"
 

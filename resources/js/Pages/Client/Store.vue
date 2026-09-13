@@ -30,7 +30,17 @@ export default {
 
 <template>
     <div class="shell section">
-        <h1 class="title-glow center">{{ header.title || 'Only Sayajin Store' }}</h1>
+        <!-- Bandeau de la marque. Le titre textuel reste en repli tant que
+             le visuel n'est pas téléversé, et sert aussi aux lecteurs d'écran. -->
+        <img
+            v-if="header.image"
+            :src="header.image"
+            :alt="header.title || 'Only Sayajin Store'"
+            class="shop-banner"
+            loading="eager"
+            decoding="async"
+        >
+        <h1 v-else class="title-glow center">{{ header.title || 'Only Sayajin Store' }}</h1>
 
         <p class="shop-notice">
             {{ header.notice || 'Disponible uniquement au studio' }}

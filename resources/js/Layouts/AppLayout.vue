@@ -172,6 +172,14 @@ export default {
         },
     },
 
+    beforeUnmount() {
+        // Le blocage est posé sur <body>, qui survit au changement de page.
+        // Sans cette libération, naviguer vers un écran servi par un autre
+        // layout — la connexion, par exemple — laisse la page figée : le
+        // menu a disparu, mais son verrou reste.
+        document.body.style.overflow = ''
+    },
+
     methods: {
         logout() {
             router.post(route('logout'))
@@ -267,7 +275,7 @@ export default {
             <nav v-if="menuOpen" class="menu-panel">
                 <Link v-for="link in menuLinks" :key="link.key" :href="link.href">{{ link.label }}</Link>
 
-                <Link :href="bookingHref" class="btn btn--yellow">Réserver</Link>
+                <Link :href="bookingHref" class="btn btn--solid menu-cta">Réserver</Link>
 
                 <!-- Compte : séparé des pages du site, c'est une autre nature de lien -->
                 <div class="menu-account">

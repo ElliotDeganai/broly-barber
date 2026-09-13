@@ -536,7 +536,7 @@ input[type="radio"]:disabled { opacity: .4; cursor: not-allowed; }
     padding: 26px 18px 32px;
     text-align: center;
 }
-.menu-panel a {
+.menu-panel a:not(.btn) {
     display: block;
     padding: 11px 0;
     font-family: var(--font-title);
@@ -545,8 +545,32 @@ input[type="radio"]:disabled { opacity: .4; cursor: not-allowed; }
     color: var(--green);
     text-transform: none;
 }
-.menu-panel a:hover { color: var(--white); text-shadow: 0 0 14px var(--green-glow); }
-.menu-panel .btn { margin-top: 18px; }
+.menu-panel a:not(.btn):hover { color: var(--white); text-shadow: 0 0 14px var(--green-glow); }
+/* Action principale du menu.
+
+   Largeur contenue et non pleine largeur : dans une colonne de liens centrés,
+   un bouton qui va d'un bord à l'autre se lit comme un bandeau, pas comme une
+   action. Le remplissage horizontal généreux lui redonne sa nature de bouton.
+
+   Vert plein plutôt que jaune : c'est le couple le plus lisible de la charte
+   sur fond noir, et il reste cohérent avec l'action principale du bandeau. */
+/* Action principale du menu.
+
+   `.menu-panel a` impose display: block et la couleur verte à tous les liens
+   du panneau, et l'emporte sur une classe simple. Le bouton en est exclu par
+   :not(.btn), sans quoi il s'étire sur toute la largeur et son texte prend la
+   couleur du fond.
+
+   Largeur contenue : dans une colonne de liens centrés, un élément qui va d'un
+   bord à l'autre se lit comme un bandeau, pas comme une action. */
+.menu-cta {
+    display: inline-flex !important;
+    width: auto;
+    max-width: 100%;
+    margin: 20px auto 0;
+    padding: 14px 34px;
+    color: #04120A;
+}
 
 /* Transition du panneau */
 .menu-enter-active, .menu-leave-active { transition: opacity .22s ease, transform .22s ease; }
@@ -896,18 +920,44 @@ input[type="radio"]:disabled { opacity: .4; cursor: not-allowed; }
 }
 
 /* L'image occupe toute la largeur de la carte, comme le texte en dessous. */
+/* Visuel de prestation.
+
+   `cover` : l'image occupe tout le cadre, sans marge. Le cadre est en 3/4,
+   proportion des visuels fournis — à ce format, cover ne rogne rien.
+
+   ⚠ Une image aux proportions différentes SERA rognée, et un personnage
+   détouré y perdrait la tête ou les pieds. Les visuels doivent donc être
+   livrés en 3/4, soit 900 × 1200 px.
+
+   `object-position: center` : le personnage reste au centre du cadre. Un
+   éventuel rognage se répartit alors également en haut et en bas. */
 .service-visual {
     position: relative;
     width: 100%;
-    margin: 0 0 14px;
+    margin: 0 0 16px;
     aspect-ratio: 3 / 4;
-    border: 2px solid var(--border-strong);
+    border: 2px solid var(--green);
     border-radius: var(--radius);
     overflow: hidden;
+    background: transparent;
     box-shadow: 0 0 26px rgba(105, 230, 75, .16);
 }
-.service-visual img { width: 100%; height: 100%; object-fit: cover; }
+.service-visual img,
+.service-visual .smart-img,
+.service-visual .smart-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    background: transparent;
+}
 
+/* Nom et prix sur la même ligne, même taille, même graisse.
+
+   `align-items: baseline` cale le prix sur la PREMIÈRE ligne du nom : c'est
+   ce qu'on veut, puisque le nom se poursuit sur une seconde ligne avec le
+   contenu de la prestation. Un alignement centré le ferait flotter entre
+   les deux. */
 .service-head {
     display: flex;
     align-items: baseline;
@@ -918,15 +968,29 @@ input[type="radio"]:disabled { opacity: .4; cursor: not-allowed; }
 }
 .service-name {
     font-family: var(--font-accent);
-    font-size: 14px;
+    font-size: 18px;
     letter-spacing: .06em;
     line-height: 1.35;
+    /* Vert, comme sur la maquette : le blanc se confondait avec le reste
+       du texte et n'accrochait pas l'œil. */
+    color: var(--green);
+    text-shadow: 0 0 12px rgba(105, 230, 75, .45);
 }
-.service-includes { display: block; color: var(--muted); font-size: 12px; letter-spacing: .04em; }
+.service-includes {
+    display: block;
+    color: var(--green);
+    opacity: .8;
+    font-size: 12px;
+    letter-spacing: .04em;
+}
 .service-price {
     font-family: var(--font-accent);
-    font-size: 20px;
-    color: var(--white);
+    /* Même taille que le nom : un prix plus gros déséquilibrait la ligne */
+    font-size: 18px;
+    letter-spacing: .06em;
+    line-height: 1.35;
+    color: var(--green);
+    text-shadow: 0 0 14px rgba(105, 230, 75, .5);
     white-space: nowrap;
 }
 .service-desc { text-align: left; font-size: 14px; color: var(--muted); margin: 0 0 14px; flex: 1; }
@@ -959,12 +1023,90 @@ input[type="radio"]:disabled { opacity: .4; cursor: not-allowed; }
     margin: 20px 0 32px;
 }
 .shop-group { margin-bottom: 42px; text-align: center; }
-.shop-group-title { color: var(--green); margin-bottom: 4px; }
-.shop-group-price { font-family: var(--font-accent); font-size: 32px; color: var(--green); margin-bottom: 18px; }
-.shop-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
-.shop-item { border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
-.shop-item img { width: 100%; aspect-ratio: 1; object-fit: cover; }
-.shop-item-name { font-family: var(--font-accent); font-size: 12px; padding: 10px 8px; }
+/* Bandeau de la marque, en tête de la boutique */
+.shop-banner {
+    display: block;
+    width: 100%;
+    max-width: 460px;
+    height: auto;
+    margin: 0 auto 6px;
+}
+
+/* Titre de gamme.
+
+   Bebas Neue et non Anton : c'est la police des titres du site, bien plus
+   large et haute. L'ancienne taille par défaut se perdait au milieu des
+   visuels, alors que la maquette en fait le repère principal de la page. */
+.shop-group-title {
+    font-family: var(--font-title);
+    font-size: clamp(34px, 10vw, 52px);
+    line-height: 1.02;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    text-align: center;
+    color: var(--green);
+    text-shadow:
+        0 0 18px rgba(105, 230, 75, .55),
+        0 0 42px rgba(105, 230, 75, .28);
+    margin-bottom: 2px;
+}
+
+.shop-group-price {
+    font-family: var(--font-title);
+    font-size: clamp(28px, 8vw, 42px);
+    line-height: 1.1;
+    text-align: center;
+    color: var(--green);
+    text-shadow: 0 0 16px rgba(105, 230, 75, .5);
+    margin-bottom: 20px;
+}
+
+/* Grille de la boutique.
+
+   `justify-content: center` centre les colonnes réellement occupées : la
+   dernière rangée incomplète se retrouve donc centrée, quel que soit le
+   nombre de produits ET le nombre de colonnes.
+
+   Les colonnes sont en largeur fixe et non en fraction. C'est la condition
+   pour que le centrage opère : des colonnes en 1fr occupent toute la largeur
+   disponible, il ne reste alors aucun espace à répartir. */
+.shop-grid {
+    display: grid;
+    /* Plafond relevé à 300 px : sur mobile les colonnes se réduisent d'elles-
+       mêmes pour tenir dans la largeur, le plafond ne joue qu'à partir des
+       écrans larges. C'est lui qui bridait la taille des visuels. */
+    grid-template-columns: repeat(2, minmax(0, 300px));
+    justify-content: center;
+    gap: 16px;
+}
+
+.shop-item {
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+/* `center` plutôt que le cadrage par défaut : les pots sont photographiés
+   au centre de leur visuel, un rognage par les bords les décalait. */
+.shop-item img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    object-position: center;
+}
+.shop-item-name {
+    font-family: var(--font-accent);
+    font-size: 17px;
+    letter-spacing: .06em;
+    line-height: 1.3;
+    text-align: center;
+    padding: 12px 8px;
+    /* Même traitement que le nom des prestations : vert avec lueur diffuse,
+       pour que les deux écrans se répondent. */
+    color: var(--green);
+    text-shadow: 0 0 12px rgba(105, 230, 75, .45);
+}
+
 
 /* --------------------------------------------------------------------------
    Galerie — carrousel (la note de développement écarte la mosaïque)
@@ -1104,7 +1246,9 @@ input[type="radio"]:disabled { opacity: .4; cursor: not-allowed; }
    -------------------------------------------------------------------------- */
 @media (min-width: 768px) {
     .service-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px; }
-    .shop-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    /* Trois colonnes plutôt que quatre : à quatre, chaque vignette retombait
+       sous 200 px sur un écran courant, soit plus petit qu'en deux colonnes. */
+    .shop-grid { grid-template-columns: repeat(3, minmax(0, 280px)); gap: 20px; }
     .carousel figure { flex-basis: 38%; }
 }
 
@@ -1427,12 +1571,17 @@ table.admin-table { width: 100%; border-collapse: collapse; font-size: 14px; }
    ========================================================================== */
 .auth-shell {
     position: relative;
+    /* min-height et non height : la carte peut dépasser l'écran — formulaire
+       d'inscription, messages d'erreur — et doit alors pouvoir défiler. */
     min-height: 100svh;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 40px 18px;
-    overflow: hidden;
+    /* `overflow: hidden` bloquait tout défilement. Seul l'axe horizontal a
+       besoin d'être contenu, pour l'aura décorative qui déborde. */
+    overflow-x: hidden;
+    overflow-y: visible;
 }
 /* Aura verte diffuse, seul décor de ces écrans */
 .auth-aura {
@@ -1765,6 +1914,8 @@ table.admin-table { width: 100%; border-collapse: collapse; font-size: 14px; }
     width: 100%;
     height: 100%;
     overflow: hidden;
+    /* Fond neutre par défaut ; les contextes à image détourée le
+       neutralisent, comme .service-visual. */
     background: var(--surface-solid);
 }
 .smart-img img { width: 100%; height: 100%; object-fit: cover; display: block; }

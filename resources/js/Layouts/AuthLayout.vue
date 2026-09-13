@@ -16,6 +16,12 @@ export default {
         subtitle: { type: String, default: null },
     },
 
+    mounted() {
+        // Filet de sécurité : si un écran précédent a laissé le défilement
+        // bloqué, on le rétablit à l'arrivée.
+        document.body.style.overflow = ''
+    },
+
     computed: {
         settings() {
             return this.$page.props.settings || {}
