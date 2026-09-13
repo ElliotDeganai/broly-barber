@@ -51,10 +51,11 @@ etape "Vérifications préalables"
 
 grep -q "^APP_KEY=base64:" .env || abandon "APP_KEY vide. Lancez : php artisan key:generate"
 
-# APP_DEBUG=true afficherait la configuration complète — identifiants compris —
-# à tout visiteur tombant sur une erreur.
+# Signalé sans bloquer : le mode débogage est parfois voulu sur un serveur de
+# test. À savoir tout de même — la page d'erreur y affiche la configuration
+# complète, identifiants de base et clés d'envoi compris, à qui tombe dessus.
 if grep -q "^APP_DEBUG=true" .env; then
-    abandon "APP_DEBUG=true. Passez-le à false avant de déployer."
+    alerte "APP_DEBUG=true — la page d'erreur exposera la configuration aux visiteurs."
 fi
 
 grep -q "^APP_ENV=production" .env || alerte "APP_ENV n'est pas à « production »."
