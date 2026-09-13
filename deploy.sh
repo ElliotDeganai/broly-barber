@@ -74,6 +74,15 @@ fi
 
 grep -q "^APP_ENV=production" .env || alerte "APP_ENV n'est pas à « production »."
 
+# Git suit le bit d'exécution des fichiers. Un chmod appliqué à l'ensemble du
+# projet — pour régler des droits d'écriture — fait apparaître TOUS les fichiers
+# comme modifiés, et bloque le git pull. On demande à Git d'ignorer ce bit :
+# sur un serveur, ce sont les droits du système qui comptent, pas ceux du dépôt.
+if [ "$(git config --get core.fileMode || echo true)" != "false" ]; then
+    git config core.fileMode false
+    alerte "Suivi des permissions désactivé (core.fileMode) — un chmod ne fera plus apparaître le projet entier comme modifié."
+fi
+
 # Une modification faite directement sur le serveur bloquerait le git pull
 if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
     echo
@@ -202,6 +211,10 @@ etape "Droits d'accès"
 # ubuntu:www-data — vous gardez la main pour éditer, PHP peut écrire ses
 # journaux, sessions, caches et images téléversées.
 sudo chown -R "$(id -un)":www-data "$RACINE"
+
+# Uniquement les dossiers où PHP doit écrire. Un chmod -R sur tout le projet
+# rendrait chaque fichier exécutable, ce que Git détecterait comme une
+# modification massive au déploiement suivant.
 sudo chmod -R 775 storage bootstrap/cache
 sudo find storage public/storage -type d -exec chmod 775 {} \; 2>/dev/null || true
 
