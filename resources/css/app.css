@@ -535,6 +535,18 @@ input[type="radio"]:disabled { opacity: .4; cursor: not-allowed; }
     border-bottom: 1px solid var(--border);
     padding: 26px 18px 32px;
     text-align: center;
+
+    /* Le panneau ne peut pas dépasser l'écran.
+       Sans hauteur maximale, les derniers liens — connexion, réseaux
+       sociaux — tombaient hors champ, et le corps de page étant verrouillé
+       pendant l'ouverture, rien ne permettait de les atteindre.
+       `svh` et non `vh` : sur mobile, `vh` compte la hauteur barre d'adresse
+       rétractée, ce qui laisse du contenu masqué tant qu'elle est visible. */
+    max-height: calc(100svh - var(--topbar-h));
+    overflow-y: auto;
+    /* Le défilement s'arrête au panneau et n'entraîne pas la page derrière */
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
 }
 .menu-panel a:not(.btn) {
     display: block;
@@ -599,7 +611,14 @@ input[type="radio"]:disabled { opacity: .4; cursor: not-allowed; }
     backdrop-filter: blur(14px);
     border-top: 1px solid var(--border);
 }
-.tabbar a {
+.tabbar a,
+.tabbar button {
+    /* La remise à zéro globale ne couvre que la police et le curseur :
+       sans ces deux lignes, le navigateur donne au bouton un fond gris et
+       une bordure, et il détonne au milieu des liens. */
+    background: transparent;
+    border: none;
+    padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -699,7 +718,7 @@ input[type="radio"]:disabled { opacity: .4; cursor: not-allowed; }
    document : à niveau égal, c'est le voile qui gagne et il intercepte les
    clics sur le bouton, situé dans cette zone. La partie du voile ainsi
    recouverte est son remplissage haut, donc vide : rien n'est masqué. */
-.hero { position: relative; z-index: 2; }
+.hero { position: relative; z-index: 2; width: 100%; }
 
 /* Pages sans visuel plein écran — prestations, galerie, FAQ, contact…
    Le fond y est nettement plus assombri : leur contenu commence tout en haut,
@@ -804,8 +823,6 @@ input[type="radio"]:disabled { opacity: .4; cursor: not-allowed; }
 /* --------------------------------------------------------------------------
    Bandeau
    -------------------------------------------------------------------------- */
-.hero { width: 100%; }
-
 .hero-inner {
     width: 100%;
     min-height: 100svh;
@@ -880,8 +897,6 @@ input[type="radio"]:disabled { opacity: .4; cursor: not-allowed; }
 .hero-social--tiktok    { background: #0B0B0B; border: 1px solid rgba(255, 255, 255, .22); }
 .hero-social--instagram { background: linear-gradient(135deg, #833AB4, #FD1D1D 55%, #FCB045); }
 
-.btn--lg { padding: 18px 38px; font-size: 19px; }
-
 @media (prefers-reduced-motion: reduce) {
     .hero-particles span, .smoke-wisp, .page-bg img, .btn--charged { animation: none; }
     .faq-answer-wrap { transition: none; }
@@ -909,44 +924,70 @@ input[type="radio"]:disabled { opacity: .4; cursor: not-allowed; }
 /* --------------------------------------------------------------------------
    Prestations
    -------------------------------------------------------------------------- */
-.service-list { display: grid; grid-template-columns: 1fr; gap: 26px; align-items: stretch; }
+/* Disposition en flex plutôt qu'en grille.
+
+   Les cartes doivent remplir toute la largeur disponible, et la dernière
+   rangée incomplète doit rester centrée. Une grille ne sait pas faire les
+   deux : des colonnes en fraction occupent tout l'espace mais calent les
+   orphelines à gauche, des colonnes bornées centrent mais laissent des marges.
+
+   En flex, `flex-grow` étire les cartes jusqu'à remplir la rangée, le
+   plafond les empêche de dépasser la largeur d'une colonne, et
+   `justify-content` centre ce qui reste sur la dernière ligne. */
+.service-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 24px;
+}
 
 /* Colonne flex : la description absorbe l'espace restant, donc les boutons
    de toutes les cartes d'une même ligne s'alignent sur le même axe. */
 .service-card {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    /* Une carte par rangée sur mobile */
+    flex: 1 1 100%;
+    max-width: 100%;
+    min-width: 0;
 }
 
-/* L'image occupe toute la largeur de la carte, comme le texte en dessous. */
 /* Visuel de prestation.
 
-   `cover` : l'image occupe tout le cadre, sans marge. Le cadre est en 3/4,
-   proportion des visuels fournis — à ce format, cover ne rogne rien.
+   `contain` : le personnage entier est visible, quelles que soient les
+   proportions du fichier fourni. Aucun rognage, donc aucun risque de couper
+   une tête ou des pieds — c'est le défaut de `cover` sur des images
+   détourées dont le format n'est pas garanti.
 
-   ⚠ Une image aux proportions différentes SERA rognée, et un personnage
-   détouré y perdrait la tête ou les pieds. Les visuels doivent donc être
-   livrés en 3/4, soit 900 × 1200 px.
-
-   `object-position: center` : le personnage reste au centre du cadre. Un
-   éventuel rognage se répartit alors également en haut et en bas. */
+   `max-height: 42vh` : sur mobile, un cadre en 4/5 occupant toute la largeur
+   mesurerait plus de 450 px de haut et repousserait le nom et le prix hors de
+   l'écran. Le plafond garantit que le visuel, l'intitulé et le tarif tiennent
+   ensemble sur une seule hauteur d'écran. */
 .service-visual {
     position: relative;
     width: 100%;
-    margin: 0 0 16px;
+    margin: 0 0 14px;
+    /* 3/4, soit exactement les proportions des visuels livrés : l'image
+       remplit alors tout le cadre, sans bande vide ni rognage. Un cadre en
+       4/5 laissait des marges en haut et en bas. */
     aspect-ratio: 3 / 4;
+    max-height: 46vh;
     border: 2px solid var(--green);
     border-radius: var(--radius);
     overflow: hidden;
     background: transparent;
-    box-shadow: 0 0 26px rgba(105, 230, 75, .16);
+    box-shadow: 0 0 20px rgba(105, 230, 75, .14);
 }
 .service-visual img,
 .service-visual .smart-img,
 .service-visual .smart-img img {
     width: 100%;
     height: 100%;
+    /* `cover` : le cadre est rempli quelles que soient les proportions du
+       fichier. `contain` laissait des bandes vides dès qu'une image n'était
+       pas exactement en 3/4 — un carré, par exemple.
+
+       Le rognage éventuel part du centre : les personnages y sont cadrés. */
     object-fit: cover;
     object-position: center;
     background: transparent;
@@ -1061,29 +1102,25 @@ input[type="radio"]:disabled { opacity: .4; cursor: not-allowed; }
     margin-bottom: 20px;
 }
 
-/* Grille de la boutique.
-
-   `justify-content: center` centre les colonnes réellement occupées : la
-   dernière rangée incomplète se retrouve donc centrée, quel que soit le
-   nombre de produits ET le nombre de colonnes.
-
-   Les colonnes sont en largeur fixe et non en fraction. C'est la condition
-   pour que le centrage opère : des colonnes en 1fr occupent toute la largeur
-   disponible, il ne reste alors aucun espace à répartir. */
+/* Même principe que les prestations : les vignettes remplissent la largeur,
+   et un produit seul sur sa rangée reste centré. */
 .shop-grid {
-    display: grid;
-    /* Plafond relevé à 300 px : sur mobile les colonnes se réduisent d'elles-
-       mêmes pour tenir dans la largeur, le plafond ne joue qu'à partir des
-       écrans larges. C'est lui qui bridait la taille des visuels. */
-    grid-template-columns: repeat(2, minmax(0, 300px));
+    display: flex;
+    flex-wrap: wrap;
     justify-content: center;
     gap: 16px;
 }
 
 .shop-item {
+    /* Une vignette par rangée sur mobile, comme les prestations */
+    flex: 1 1 100%;
+    max-width: 100%;
+    min-width: 0;
     border-radius: var(--radius);
     overflow: hidden;
-    border: 1px solid var(--border);
+    /* Même cadre que les prestations : vert plein et lueur diffuse */
+    border: 2px solid var(--green);
+    box-shadow: 0 0 20px rgba(105, 230, 75, .14);
 }
 /* `center` plutôt que le cadrage par défaut : les pots sont photographiés
    au centre de leur visuel, un rognage par les bords les décalait. */
@@ -1244,16 +1281,45 @@ input[type="radio"]:disabled { opacity: .4; cursor: not-allowed; }
 /* --------------------------------------------------------------------------
    Desktop — cohérence avec le mobile, sans le dénaturer
    -------------------------------------------------------------------------- */
+/* Écrans courts : on resserre les liens pour éviter d'avoir à faire défiler
+   le menu, qui reste possible mais se remarque peu. */
+@media (max-height: 720px) {
+    .menu-panel { padding: 16px 18px 20px; }
+    .menu-panel a:not(.btn) { padding: 8px 0; font-size: 20px; }
+    .menu-cta { margin-top: 12px; padding: 12px 30px; }
+    .menu-account { margin-top: 14px; padding-top: 14px; }
+}
+
+/* Respiration latérale sur mobile.
+
+   Les 18 px de la coquille suffisent à des blocs de texte, pas à une carte
+   pleine largeur bordée de vert : le cadre arrive presque au bord de l'écran.
+   Ce retrait ne vaut que sous 768 px — au-delà, les cartes ne font plus
+   qu'un demi ou un tiers de la largeur et n'en ont pas besoin. */
+@media (max-width: 767px) {
+    .service-list,
+    .shop-grid {
+        padding-inline: 12px;
+    }
+}
+
 @media (min-width: 768px) {
-    .service-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px; }
+    /* Deux par rangée : la moitié de la largeur, moins la moitié de l'écart */
+    .service-card { flex-basis: calc(50% - 12px); max-width: calc(50% - 12px); }
+    /* Au-delà du mobile, la carte fait 300 px de large : le cadre mesure
+       375 px de haut, le plafond en vh n'a plus de raison d'être. */
+    .service-visual { max-height: none; }
     /* Trois colonnes plutôt que quatre : à quatre, chaque vignette retombait
        sous 200 px sur un écran courant, soit plus petit qu'en deux colonnes. */
-    .shop-grid { grid-template-columns: repeat(3, minmax(0, 280px)); gap: 20px; }
+    .shop-grid { gap: 20px; }
+    /* Trois par rangée au-delà du mobile */
+    .shop-item { flex-basis: calc(33.333% - 14px); max-width: calc(33.333% - 14px); }
     .carousel figure { flex-basis: 38%; }
 }
 
 @media (min-width: 1024px) {
-    .service-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    /* Trois par rangée : le tiers, moins les deux écarts répartis */
+    .service-card { flex-basis: calc(33.333% - 16px); max-width: calc(33.333% - 16px); }
     .carousel figure { flex-basis: 26%; }
     .hero { align-items: center; }
     .hero-inner { max-width: 720px; margin: 0 auto; }
@@ -1485,6 +1551,11 @@ input[type="radio"]:disabled { opacity: .4; cursor: not-allowed; }
     border: 1px solid var(--border);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     font-size: 12px;
+    /* Cliquable : la cellule filtre la liste sur son jour */
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    transition: border-color .15s ease, background .15s ease;
 }
 .month-cell.is-closed { opacity: .3; }
 .month-bar { width: 70%; height: 3px; background: var(--border); border-radius: 2px; margin-top: 5px; overflow: hidden; }
@@ -1954,12 +2025,6 @@ table.admin-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 /* Cases vides précédant le 1er du mois */
 .month-blank { aspect-ratio: 1; }
 
-.month-cell {
-    background: transparent;
-    color: inherit;
-    cursor: pointer;
-    transition: border-color .15s ease, background .15s ease;
-}
 .month-cell:hover:not(.is-closed) {
     border-color: var(--border-strong);
     background: rgba(105, 230, 75, .07);

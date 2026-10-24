@@ -28,6 +28,20 @@ return Application::configure(basePath: dirname(__DIR__))
             AddLinkHeadersForPreloadedAssets::class,
         ]);
 
+        /*
+         * Où renvoyer un visiteur non connecté.
+         *
+         * Sans cette règle, Laravel utilise route('login') : le formulaire à
+         * mot de passe du barbier. Un client déconnecté qui ouvre « Mon
+         * espace » y atterrit et croit que son accès est cassé.
+         *
+         * Le back office garde son propre écran : un administrateur n'a rien
+         * à faire sur la connexion par lien magique, qui lui est fermée.
+         */
+        $middleware->redirectGuestsTo(
+            fn ($request) => $request->is('admin*') ? route('login') : route('client.login'),
+        );
+
         // Alias utilisés dans routes/web.php
         $middleware->alias([
             'admin'       => EnsureIsAdmin::class,

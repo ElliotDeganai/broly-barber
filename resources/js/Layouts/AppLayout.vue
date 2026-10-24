@@ -121,13 +121,24 @@ export default {
             return links
         },
 
-        /** Barre basse : prestations, réservation, accueil, compte. */
+        /**
+         * Barre basse : prestations, réservation, accueil, puis la session.
+         *
+         * Le dernier onglet change de nature selon l'état : il connecte un
+         * visiteur, il déconnecte un client. Il menait auparavant vers « Mon
+         * espace » sous une icône de porte, ce qui laissait croire à un bouton
+         * de déconnexion — l'espace client reste accessible par le menu.
+         */
         tabLinks() {
+            const session = this.user
+                ? { key: 'logout', icon: 'logout', action: true, label: 'Déconnexion' }
+                : { key: 'login',  icon: 'login',  href: route('client.login'), label: 'Connexion' }
+
             return [
                 { key: 'services', icon: 'scissors', href: route('services'), label: 'Prestations' },
                 { key: 'booking',  icon: 'calendar', href: this.bookingHref,  label: 'Réserver' },
                 { key: 'home',     icon: 'home',     href: route('home'),     label: 'Accueil' },
-                { key: 'account',  icon: 'login',    href: this.accountHref,  label: this.user ? 'Mon espace' : 'Connexion' },
+                session,
             ]
         },
         /**
@@ -140,9 +151,6 @@ export default {
             if (this.auth.permissions.manage_content) return route('admin.appointments.index')
 
             return route('booking.services')
-        },
-        accountHref() {
-            return this.user ? route('account') : route('client.login')
         },
     },
 
@@ -182,7 +190,16 @@ export default {
 
     methods: {
         logout() {
-            router.post(route('logout'))
+            // Le menu est fermé avant la requête : sinon il reste ouvert
+            // par-dessus la page d'accueil, et l'on croit n'avoir pas bougé.
+            this.menuOpen = false
+
+            router.post(route('logout'), {}, {
+                // Destination explicite plutôt que la redirection du
+                // contrôleur : le comportement ne dépend plus de Breeze, et
+                // l'on ne peut pas se retrouver renvoyé sur une page réservée.
+                onFinish: () => router.visit(route('home'), { replace: true }),
+            })
         },
 
         onScroll() {
@@ -303,15 +320,21 @@ export default {
         <SiteFooter v-if="footer" />
 
         <nav class="tabbar">
-            <Link
-                v-for="tab in tabLinks"
-                :key="tab.key"
-                :href="tab.href"
-                :class="{ 'is-active': isActive(tab.href) }"
-                :aria-label="tab.label"
-            >
-                <Icon :name="tab.icon" :size="20" />
-            </Link>
+            <template v-for="tab in tabLinks" :key="tab.key">
+                <!-- Déconnexion : une action, donc un bouton et non un lien -->
+                <button v-if="tab.action" type="button" :aria-label="tab.label" @click="logout">
+                    <Icon :name="tab.icon" :size="20" />
+                </button>
+
+                <Link
+                    v-else
+                    :href="tab.href"
+                    :class="{ 'is-active': isActive(tab.href) }"
+                    :aria-label="tab.label"
+                >
+                    <Icon :name="tab.icon" :size="20" />
+                </Link>
+            </template>
         </nav>
     </div>
 </template>

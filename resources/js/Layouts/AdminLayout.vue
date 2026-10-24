@@ -120,7 +120,11 @@ export default {
             return this.$page.url.split('?')[0].startsWith(path)
         },
         logout() {
-            router.post(route('logout'))
+            // Destination explicite, comme sur le site public : on ne dépend
+            // pas de la redirection du contrôleur de Breeze.
+            router.post(route('logout'), {}, {
+                onFinish: () => router.visit(route('home'), { replace: true }),
+            })
         },
     },
 }
