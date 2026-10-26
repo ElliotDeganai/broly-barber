@@ -15,7 +15,11 @@ export default {
     props: {
         weekly:     { type: Array, default: () => [] },
         breaks:     { type: Array, default: () => [] },
-        exceptions: { type: Array, default: () => [] },
+        exceptions:  { type: Array,  default: () => [] },
+        slotStep:    { type: Number, default: 15 },
+        stepOptions:    { type: Array,  default: () => [15, 30, 45, 60] },
+        horizonDays:    { type: Number, default: 30 },
+        horizonOptions: { type: Array,  default: () => [7, 14, 30] },
     },
 
     data() {
@@ -42,6 +46,8 @@ export default {
                 end_time: String(b.end_time).slice(0, 5),
                 label: b.label,
             })),
+            step: this.slotStep,
+            horizon: this.horizonDays,
             exceptionForm: useForm({
                 type: 'closed', start_date: '', end_date: '',
                 start_time: '', end_time: '', label: '',
@@ -57,6 +63,53 @@ export default {
         },
         addPause() {
             this.pauses.push({ weekday: 1, start_time: '13:00', end_time: '14:00', label: 'Pause déjeuner' })
+        },
+
+        horizonLabel(jours) {
+            return {
+                7:  'La semaine qui vient',
+                14: 'Les deux prochaines semaines',
+                30: 'Le mois qui vient',
+            }[jours] || `${jours} jours`
+        },
+
+        /** Date butoir correspondante, pour rendre le choix concret. */
+        horizonExample(jours) {
+            const d = new Date()
+
+            d.setDate(d.getDate() + jours)
+
+            return 'Jusqu\'au ' + d.toLocaleDateString('fr-FR', {
+                weekday: 'long', day: 'numeric', month: 'long',
+            })
+        },
+
+        saveHorizon() {
+            router.post(route('admin.availability.horizon'), { days: this.horizon }, { preserveScroll: true })
+        },
+
+        /** Libellé parlant : « 30 min » dit moins que « à l'heure et à la demie ». */
+        stepLabel(pas) {
+            return {
+                15: 'Tous les quarts d\'heure',
+                30: 'À l\'heure et à la demie',
+                45: 'Toutes les 45 minutes',
+                60: 'À l\'heure pile uniquement',
+            }[pas] || `Toutes les ${pas} minutes`
+        },
+
+        stepExample(pas) {
+            const heures = []
+
+            for (let m = 600; m < 720; m += pas) {
+                heures.push(m % 60 ? `${Math.floor(m / 60)}h${String(m % 60).padStart(2, '0')}` : `${Math.floor(m / 60)}h`)
+            }
+
+            return heures.join(' · ') + ' …'
+        },
+
+        saveStep() {
+            router.post(route('admin.availability.step'), { step: this.step }, { preserveScroll: true })
         },
 
         saveWeekly() {
@@ -89,18 +142,66 @@ export default {
     </p>
 
     <section class="card admin-card">
+        <h2 class="admin-card-title">Ouverture du calendrier</h2>
+        <p class="field-help" style="margin-top: -6px">
+            Jusqu'où les clients peuvent réserver à l'avance. Au-delà, le calendrier
+            reste visible mais aucun créneau n'y est proposé.
+        </p>
+
+        <div class="pick-list">
+            <label class="check" v-for="jours in horizonOptions" :key="jours">
+                <input type="radio" :value="jours" v-model.number="horizon">
+                <span>
+                    <strong>{{ horizonLabel(jours) }}</strong>
+                    <span class="pick-example">{{ horizonExample(jours) }}</span>
+                </span>
+            </label>
+        </div>
+
+        <div class="row-actions" style="margin-top: 16px">
+            <button type="button" class="btn btn--solid btn--sm"
+                    :disabled="horizon === horizonDays" @click="saveHorizon">Enregistrer</button>
+        </div>
+    </section>
+
+    <section class="card admin-card">
+        <h2 class="admin-card-title">Pas des créneaux</h2>
+        <p class="field-help" style="margin-top: -6px">
+            Heures de départ proposées aux clients. La grille est calée sur l'heure
+            pleine : avec un pas d'une heure, un salon qui ouvre à 9h30 propose 10h,
+            pas 9h30. La durée des prestations, elle, ne change pas.
+        </p>
+
+        <div class="pick-list">
+            <label class="check" v-for="pas in stepOptions" :key="pas">
+                <input type="radio" :value="pas" v-model.number="step">
+                <span>
+                    <strong>{{ stepLabel(pas) }}</strong>
+                    <span class="pick-example">{{ stepExample(pas) }}</span>
+                </span>
+            </label>
+        </div>
+
+        <div class="row-actions" style="margin-top: 16px">
+            <button type="button" class="btn btn--solid btn--sm"
+                    :disabled="step === slotStep" @click="saveStep">Enregistrer</button>
+        </div>
+    </section>
+
+    <section class="card admin-card">
         <h2 class="admin-card-title">Horaires de la semaine</h2>
 
         <div class="row-list">
-            <div class="row-item" v-for="(slot, i) in slots" :key="i">
-                <select v-model.number="slot.weekday" style="flex: 0 0 140px">
+            <div class="row-item hours-row" v-for="(slot, i) in slots" :key="i">
+                <select v-model.number="slot.weekday">
                     <option v-for="d in days" :key="d.value" :value="d.value">{{ d.label }}</option>
                 </select>
-                <input type="time" v-model="slot.start_time" style="flex: 0 0 120px">
-                <input type="time" v-model="slot.end_time" style="flex: 0 0 120px">
+                <input type="time" v-model="slot.start_time" aria-label="Heure d'ouverture">
+                <input type="time" v-model="slot.end_time" aria-label="Heure de fermeture">
+                <!-- Pas de classe « field » ici : sa marge basse décalerait la
+                     case vers le haut dans une ligne alignée au centre. -->
                 <label class="check">
-                    <input type="checkbox" v-model="slot.is_open">
-                    <span>Ouvert</span>
+                    <input type="checkbox" v-model="slot.is_open"> Ouvert
                 </label>
                 <button type="button" class="btn-icon btn-icon--danger" aria-label="Retirer"
                         @click="slots.splice(i, 1)">
@@ -121,13 +222,13 @@ export default {
         <h2 class="admin-card-title">Pauses hebdomadaires</h2>
 
         <div class="row-list">
-            <div class="row-item" v-for="(pause, i) in pauses" :key="i">
-                <select v-model.number="pause.weekday" style="flex: 0 0 140px">
+            <div class="row-item hours-row" v-for="(pause, i) in pauses" :key="i">
+                <select v-model.number="pause.weekday">
                     <option v-for="d in days" :key="d.value" :value="d.value">{{ d.label }}</option>
                 </select>
-                <input type="time" v-model="pause.start_time" style="flex: 0 0 120px">
-                <input type="time" v-model="pause.end_time" style="flex: 0 0 120px">
-                <input type="text" v-model="pause.label" placeholder="Intitulé" style="flex: 1 1 140px">
+                <input type="time" v-model="pause.start_time" aria-label="Début de la pause">
+                <input type="time" v-model="pause.end_time" aria-label="Fin de la pause">
+                <input type="text" v-model="pause.label" placeholder="Intitulé" class="grow">
                 <button type="button" class="btn-icon btn-icon--danger" aria-label="Retirer"
                         @click="pauses.splice(i, 1)">
                     <Icon name="trash" :size="16" />

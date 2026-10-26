@@ -20,11 +20,20 @@ use Inertia\Inertia;
  */
 class ContentController extends Controller
 {
+    /**
+     * Réglages pilotés par un écran dédié.
+     *
+     * Les éditer aussi ici créerait deux vérités, et l'une des deux n'aurait
+     * pas la validation de l'autre.
+     */
+    private const AILLEURS = ['booking_slot_step', 'booking_horizon_days'];
+
     public function __construct(private ImageUploadService $images) {}
 
     public function index()
     {
-        $settings = SiteSetting::orderBy('group')->orderBy('position')->get();
+        $settings = SiteSetting::whereNotIn('key', self::AILLEURS)
+            ->orderBy('group')->orderBy('position')->get();
         $groups   = SettingGroup::orderBy('scope')->orderBy('position')->get();
 
         $sections = $groups->map(fn ($group) => [

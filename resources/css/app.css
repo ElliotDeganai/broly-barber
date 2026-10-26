@@ -189,6 +189,18 @@ p { margin: 0 0 14px; }
 .btn--shop { background: var(--orange); color: #180700; }
 
 .btn--ghost { border-color: var(--border-strong); color: var(--white); }
+/* Action destructrice ou défavorable au client : même forme que le bouton
+   discret, mais la couleur prévient du caractère irréversible. */
+.btn--danger {
+    border-color: var(--danger-border);
+    color: var(--danger);
+}
+.btn--danger:hover {
+    border-color: var(--danger);
+    background: rgba(255, 90, 90, .10);
+    box-shadow: none;
+}
+
 .btn--ghost:hover { border-color: var(--green); color: var(--green); }
 
 .btn--block { display: flex; width: 100%; }
@@ -271,6 +283,24 @@ input:focus, select:focus, textarea:focus {
     box-shadow: 0 0 0 3px rgba(105, 230, 75, .16);
 }
 input::placeholder, textarea::placeholder { color: var(--faint); }
+
+/* Icône native des champs date et heure.
+   Chrome la dessine en sombre, pour un fond clair : sur ce thème elle
+   disparaît dans le champ. On l'inverse en blanc, et elle s'affirme au
+   survol pour signaler qu'elle est cliquable. */
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    opacity: .6;
+    cursor: pointer;
+    transition: opacity .15s ease;
+}
+input[type="time"]:hover::-webkit-calendar-picker-indicator,
+input[type="date"]:hover::-webkit-calendar-picker-indicator,
+input[type="time"]:focus::-webkit-calendar-picker-indicator,
+input[type="date"]:focus::-webkit-calendar-picker-indicator {
+    opacity: 1;
+}
 
 /* --------------------------------------------------------------------------
    Cases à cocher et boutons radio
@@ -993,6 +1023,69 @@ input[type="radio"]:disabled { opacity: .4; cursor: not-allowed; }
     background: transparent;
 }
 
+/* ---------- Avant / après commandé par le défilement ----------
+   Le cadre reprend .service-visual : même bordure, mêmes proportions,
+   même plafond de hauteur que les prestations sans couple d'images. */
+/* min-width: 0 : sans lui, un élément flex refuse de rétrécir sous la
+   largeur de son contenu et la carte déborde sur les écrans étroits. */
+.ba-wrap { min-width: 0; }
+.ba { position: relative; margin-bottom: 8px; }
+.ba img { position: absolute; inset: 0; }
+
+/* L'avant recouvre l'après et se retire par la gauche à mesure que --p monte */
+.ba .ba-avant { z-index: 2; clip-path: inset(0 0 0 calc(var(--p, 0) * 100%)); opacity: var(--o, 1); }
+/* Boutons : le changement se fait en fondu, pas au balayage. La découpe se
+   referme en même temps que l'opacité tombe, si bien que seul le fondu se voit. */
+.ba.is-fige .ba-avant { transition: clip-path .5s ease, opacity .5s ease; }
+/* Révélation d'entrée : plus lente, c'est elle qui fait la démonstration. */
+.ba.is-intro .ba-avant { transition: clip-path 1.1s cubic-bezier(.65, 0, .35, 1); }
+.ba.is-intro .ba-ligne { transition: left 1.1s cubic-bezier(.65, 0, .35, 1), opacity 1.1s ease; }
+
+.ba-ligne {
+    position: absolute; top: 0; bottom: 0; z-index: 3;
+    width: 2px; left: calc(var(--p, 0) * 100%);
+    background: var(--green);
+    box-shadow: 0 0 14px rgba(105, 230, 75, .7);
+    /* Elle s'efface quand il n'y a plus rien à séparer */
+    opacity: calc(1 - var(--p, 0));
+}
+
+.ba-tag {
+    position: absolute; top: 10px; right: 10px; z-index: 4;
+    font-family: var(--font-accent); font-size: 10px;
+    letter-spacing: .12em; text-transform: uppercase;
+    padding: 4px 9px; border-radius: var(--radius-pill);
+    background: rgba(5, 5, 7, .74);
+    border: 1px solid var(--border-strong);
+    color: var(--green);
+}
+
+/* Deux pastilles compactes et centrées : c'est une commande d'appoint, pas
+   un appel à l'action — à pleine largeur elle concurrençait le bouton de
+   réservation de la carte. */
+.ba-onglets { display: flex; gap: 6px; margin-bottom: 14px; justify-content: center; }
+.ba-onglets button {
+    flex: 0 0 auto;
+    padding: 5px 13px;
+    font-family: var(--font-accent); font-size: 10px;
+    letter-spacing: .08em; text-transform: uppercase;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    color: var(--muted);
+    cursor: pointer;
+    transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+.ba-onglets button:hover { border-color: var(--border-strong); color: var(--white); }
+.ba-onglets button.is-active { background: var(--green); border-color: var(--green); color: #04120A; }
+
+/* Mouvement réduit : l'après s'affiche d'emblée, sans séparation qui bouge.
+   Les boutons continuent de fonctionner, sans transition. */
+@media (prefers-reduced-motion: reduce) {
+    .ba .ba-avant { transition: none; }
+    .ba .ba-ligne { display: none; }
+}
+
 /* Nom et prix sur la même ligne, même taille, même graisse.
 
    `align-items: baseline` cale le prix sur la PREMIÈRE ligne du nom : c'est
@@ -1542,6 +1635,28 @@ input[type="radio"]:disabled { opacity: .4; cursor: not-allowed; }
 .row-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 
 .admin-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+
+/* Lignes d'horaires et de pauses.
+   Les largeurs fixes de 120 px tronquaient le champ d'heure natif : selon la
+   langue du navigateur il affiche « 10:00 AM » suivi d'une icône, ce qui
+   demande nettement plus de place que « 10:00 ». */
+.hours-row > select { flex: 0 1 150px; }
+.hours-row > input[type="time"] { flex: 0 1 170px; }
+.hours-row > .grow { flex: 1 1 180px; }
+.hours-row > .check { flex: 0 0 auto; margin: 0; }
+/* La corbeille se cale à droite : l'espace restant devient une respiration
+   plutôt qu'un trou au milieu de la ligne. */
+.hours-row > .btn-icon { flex: 0 0 auto; margin-left: auto; }
+
+@media (max-width: 620px) {
+    /* Trop étroit pour une seule ligne : le jour d'abord, les deux heures
+       côte à côte, l'état ensuite. Le retrait de 6 px est la moitié du gap
+       de 12 px — sans lui les deux champs ne tiennent pas sur la ligne. */
+    .hours-row > select,
+    .hours-row > .grow { flex: 1 1 100%; }
+    .hours-row > input[type="time"] { flex: 1 1 calc(50% - 6px); }
+}
+
 .field-row { display: grid; grid-template-columns: 1fr; gap: 12px; }
 
 /* Calendrier du mois : la couleur indique la charge de la journée */
@@ -1560,6 +1675,67 @@ input[type="radio"]:disabled { opacity: .4; cursor: not-allowed; }
 .month-cell.is-closed { opacity: .3; }
 .month-bar { width: 70%; height: 3px; background: var(--border); border-radius: 2px; margin-top: 5px; overflow: hidden; }
 .month-bar span { display: block; height: 100%; background: var(--green); }
+
+/* ---------- Calendrier du tunnel de réservation ----------
+   Mêmes cases que la vue mois de l'admin, mais largeur bornée : sur grand
+   écran, des cases carrées pleine largeur donneraient une carte démesurée
+   pour afficher trente et un chiffres. */
+.book-cal { max-width: 440px; margin-inline: auto; }
+
+.month-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.month-nav span {
+    font-family: var(--font-accent);
+    font-size: 14px; letter-spacing: .05em; text-transform: uppercase;
+}
+
+/* Pas encore ouvert à la réservation : contour pointillé, pour ne pas se
+   confondre avec un jour passé ou complet — qui, eux, sont définitifs. */
+.month-cell.is-later {
+    opacity: .55;
+    border-style: dashed;
+    border-color: var(--border-strong);
+}
+
+/* Avis « ça ouvrira plus tard » : informatif, pas une impasse */
+.notice-soon {
+    display: flex; align-items: flex-start; gap: 10px;
+    margin: 14px 0 0;
+    padding: 13px 15px;
+    background: rgba(255, 213, 42, .08);
+    border: 1px solid rgba(255, 213, 42, .34);
+    border-radius: var(--radius-sm);
+    color: var(--muted);
+    font-size: 13px; line-height: 1.6;
+}
+.notice-soon svg { color: var(--yellow); flex: 0 0 auto; margin-top: 1px; }
+.notice-soon strong { color: var(--yellow); display: block; }
+
+/* Nombre de créneaux encore libres, sous le numéro du jour */
+.month-free { font-family: var(--font-accent); font-size: 10px; color: var(--green); margin-top: 2px; }
+.month-cell[disabled] { cursor: not-allowed; }
+
+/* Créneaux : tuiles compactes. Des .btn pleine taille donneraient douze gros
+   appels à l'action, et leurs capitales afficheraient « 10H00 ». */
+.slot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 8px; }
+.slot {
+    padding: 11px 6px;
+    font-family: var(--font-accent);
+    font-size: 14px;
+    letter-spacing: .03em;
+    color: var(--white);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background .15s ease, border-color .15s ease;
+}
+.slot:hover { background: rgba(105, 230, 75, .14); border-color: var(--green); }
+
+.day-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap; margin-bottom: 14px;
+}
+.day-head strong { font-size: 15px; }
 
 /* Vignettes du back office */
 .thumb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
@@ -2025,7 +2201,7 @@ table.admin-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 /* Cases vides précédant le 1er du mois */
 .month-blank { aspect-ratio: 1; }
 
-.month-cell:hover:not(.is-closed) {
+.month-cell:hover:not(.is-closed):not([disabled]) {
     border-color: var(--border-strong);
     background: rgba(105, 230, 75, .07);
 }
@@ -2036,6 +2212,224 @@ table.admin-table { width: 100%; border-collapse: collapse; font-size: 14px; }
     box-shadow: 0 0 14px rgba(105, 230, 75, .22);
 }
 
+/* Pastille de couleur : prestation dans une liste, repère dans le planning */
+.dot {
+    display: inline-block;
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    flex: 0 0 auto;
+    vertical-align: baseline;
+}
+
+/* Légende du calendrier : couleurs des prestations et pastilles de statut */
+.legend {
+    display: flex; flex-wrap: wrap; gap: 8px 26px;
+    padding-bottom: 14px; margin-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+}
+.legend-group { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+/* Intitulé de rangée : cliquable, il rallume tout le groupe */
+.legend-title {
+    font-family: var(--font-accent);
+    font-size: 9px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--faint);
+    background: transparent; border: none; padding: 0;
+    cursor: pointer;
+}
+.legend-title:hover { color: var(--green); }
+
+/* Chaque entrée est un interrupteur : éteinte, elle reste lisible mais en retrait */
+.legend-item {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; color: var(--muted);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-pill);
+    padding: 3px 9px 3px 6px;
+    cursor: pointer;
+    transition: opacity .15s ease, border-color .15s ease;
+}
+.legend-item:hover { border-color: var(--border-strong); color: var(--white); }
+.legend-item.is-off { opacity: .34; }
+.legend-item.is-off .chip { filter: grayscale(.8); }
+.legend-item svg { flex: 0 0 auto; }
+.chip { width: 13px; height: 13px; border-radius: 3px; flex: 0 0 auto; }
+
+/* Prestations présentes dans la journée, sous le compteur de créneaux */
+.month-dots { display: flex; gap: 3px; margin-top: 4px; }
+.month-dots span { width: 6px; height: 6px; border-radius: 2px; }
+
+/* Deux visuels côte à côte dans le formulaire : les comparer d'un coup d'œil
+   est le seul moyen de vérifier qu'on n'a pas inversé l'avant et l'après. */
+.visuels { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px; }
+.visuel-titre {
+    display: block; margin-bottom: 8px;
+    font-family: var(--font-accent); font-size: 11px;
+    letter-spacing: .08em; text-transform: uppercase;
+    color: var(--white);
+}
+.visuel-titre em { font-style: normal; color: var(--faint); letter-spacing: .02em; }
+
+/* Nuancier du formulaire de prestation */
+.swatches { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.swatch {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    box-shadow: 0 0 0 1px var(--border);
+    cursor: pointer;
+    padding: 0;
+}
+.swatch:hover { box-shadow: 0 0 0 1px var(--border-strong); }
+.swatch.is-active { border-color: var(--black); box-shadow: 0 0 0 2px var(--white); }
+
+/* Roue native du navigateur : l'input occupe la pastille sans se montrer */
+.swatch--custom { position: relative; overflow: hidden; display: inline-block; }
+.swatch--custom input {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    opacity: 0; cursor: pointer; border: none; padding: 0;
+}
+
+/* Nombre de créneaux pris sur le total, sous la jauge de charge */
+.month-count {
+    font-family: var(--font-accent);
+    font-size: 10px;
+    letter-spacing: .02em;
+    color: var(--muted);
+    margin-top: 3px;
+}
+.month-cell.is-selected .month-count { color: var(--green); }
+
+/* Navigation de période : flèches de part et d'autre de l'intitulé */
+.period-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; margin-bottom: 16px;
+}
+
+/* ---------- Planning horaire : vues jour et semaine ----------
+   Hauteur portée par une variable : la gouttière des heures et les colonnes
+   doivent mesurer exactement la même chose, sinon les graduations glissent. */
+.timeline { --tl-h: clamp(420px, 58vh, 720px); }
+
+.tl-head { display: flex; margin-bottom: 6px; }
+.tl-corner { flex: 0 0 48px; }
+
+.tl-day {
+    flex: 1 1 0; min-width: 0;
+    display: flex; flex-direction: column; align-items: center; gap: 1px;
+    padding: 6px 2px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    color: inherit;
+    cursor: pointer;
+    transition: border-color .15s ease, background .15s ease;
+}
+.tl-day:hover { border-color: var(--border-strong); background: rgba(105, 230, 75, .07); }
+.tl-day.is-closed { opacity: .4; }
+
+.tl-day-name {
+    font-family: var(--font-accent);
+    font-size: 9px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--faint);
+}
+.tl-day-num { font-size: 15px; font-weight: 600; }
+.tl-day-count { font-family: var(--font-accent); font-size: 10px; color: var(--muted); }
+
+.tl-grid { display: flex; }
+
+.tl-gutter { flex: 0 0 48px; position: relative; height: var(--tl-h); }
+.tl-gutter span {
+    position: absolute; right: 8px;
+    transform: translateY(-50%);
+    font-size: 10px; color: var(--faint);
+}
+
+.tl-cols {
+    flex: 1 1 0; min-width: 0;
+    position: relative; height: var(--tl-h);
+    display: flex;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+/* Graduations horaires : posées avant les colonnes, qui sont transparentes */
+.tl-line { position: absolute; left: 0; right: 0; height: 1px; background: var(--border); opacity: .6; }
+
+.tl-col { flex: 1 1 0; min-width: 0; position: relative; border-left: 1px solid var(--border); }
+.tl-col:first-of-type { border-left: none; }
+
+/* Hors des disponibilités : sans repère, une heure fermée se lit comme une
+   heure libre. Les hachures tranchent sans masquer les graduations. */
+.tl-closed {
+    position: absolute; left: 0; right: 0;
+    background: repeating-linear-gradient(45deg,
+        rgba(255, 255, 255, .05) 0 5px, transparent 5px 10px);
+}
+
+.tl-event {
+    position: absolute;
+    display: flex; flex-direction: column;
+    padding: 3px 6px;
+    /* Transparente, pas absente : la couleur du contour est posée en ligne,
+       et l'état « en attente » n'a qu'à changer le style du trait. */
+    border: 1px solid transparent;
+    border-radius: 5px;
+    font-size: 10px;
+    text-align: left;
+    line-height: 1.3;
+    overflow: hidden;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+.tl-event:hover { filter: brightness(1.12); }
+
+/* Icône de statut : centrée sur un pavé d'une ligne, en haut sinon */
+.tl-ico { position: absolute; top: 50%; right: 4px; transform: translateY(-50%); opacity: .9; }
+.tl-event:not(.is-tiny) .tl-ico { top: 3px; transform: none; }
+
+.tl-line1 { display: flex; align-items: baseline; gap: 5px; padding-right: 17px; min-width: 0; }
+.tl-event-time { font-family: var(--font-accent); font-size: 9px; opacity: .8; flex: 0 0 auto; }
+.tl-event-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tl-event-serv { opacity: .8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 17px; }
+
+/* Le contenu suit la hauteur réelle du pavé : mieux vaut une ligne entière
+   que trois lignes tranchées au milieu. */
+.tl-event.is-tiny { justify-content: center; }
+.tl-event.is-tiny .tl-event-serv,
+.tl-event.is-short .tl-event-serv { display: none; }
+
+/* En attente : le trait pointillé dit que rien n'est encore acquis */
+.tl-event.is-pending { border-style: dashed; border-width: 1.5px; }
+
+/* Annulé, refusé, non honoré : contour vide, le créneau ne tient plus */
+.tl-event.is-off .tl-event-name { text-decoration: line-through; }
+.tl-event-time { font-family: var(--font-accent); font-size: 9px; opacity: .85; padding-right: 10px; }
+.tl-event-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+
+@media (max-width: 520px) {
+    .month-dots { display: none; }
+}
+
+@media (max-width: 640px) {
+    .timeline { --tl-h: clamp(380px, 52vh, 560px); }
+    .tl-corner, .tl-gutter { flex-basis: 34px; }
+    .tl-gutter span { right: 5px; font-size: 9px; }
+    .tl-day-num { font-size: 13px; }
+    /* Sept colonnes étroites : l'heure suffit, le nom déborderait */
+    .tl-event-time { font-size: 8px; }
+    .tl-event { padding: 2px 4px; font-size: 9px; }
+}
+
+/* Liste de choix exclusifs : une ligne par option, exemple à l'appui */
+.pick-list { display: grid; gap: 10px; margin-top: 14px; }
+.pick-list .check { margin: 0; align-items: flex-start; }
+.pick-list .check > span { display: flex; flex-direction: column; gap: 2px; }
+.pick-example { font-size: 12px; color: var(--muted); }
+
+/* Bandeau de tête : état courant du filtrage et accès au panneau */
 .day-filter {
     display: flex; align-items: center; justify-content: space-between;
     gap: 14px; flex-wrap: wrap;
@@ -2047,6 +2441,14 @@ table.admin-table { width: 100%; border-collapse: collapse; font-size: 14px; }
     font-size: 14px;
     color: var(--green);
 }
+/* Aucun filtre actif : le bandeau ne doit pas attirer l'œil */
+.day-filter.is-plain {
+    background: transparent;
+    border-color: var(--border);
+    color: var(--muted);
+}
+.filter-resume { flex: 1 1 220px; min-width: 0; font-size: 13px; }
+
 
 /* ==========================================================================
    ÉDITEUR ENRICHI ET RENDU DU CONTENU
@@ -2458,8 +2860,10 @@ table.admin-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .kpi--shop .kpi-label { color: var(--orange); }
 
 /* Filtre du graphe */
-.chart-modes { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
-.chart-modes button {
+.chart-modes,
+.seg-modes { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+.chart-modes button,
+.seg-modes button {
     padding: 7px 13px;
     background: transparent;
     border: 1px solid var(--border);
@@ -2467,8 +2871,10 @@ table.admin-table { width: 100%; border-collapse: collapse; font-size: 14px; }
     color: var(--muted);
     font-size: 12px;
 }
-.chart-modes button:hover { border-color: var(--border-strong); color: var(--white); }
-.chart-modes button.is-active {
+.chart-modes button:hover,
+.seg-modes button:hover { border-color: var(--border-strong); color: var(--white); }
+.chart-modes button.is-active,
+.seg-modes button.is-active {
     background: var(--green);
     border-color: var(--green);
     color: #04120A;

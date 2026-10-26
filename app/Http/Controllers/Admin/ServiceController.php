@@ -12,6 +12,12 @@ use Inertia\Inertia;
 /** Prestations : intitulé, contenu, tarif, durée, visuel. */
 class ServiceController extends Controller
 {
+    /** Champ du formulaire => colonne. Les deux visuels suivent le même chemin. */
+    private const VISUELS = [
+        'image'        => 'image_path',
+        'image_before' => 'image_before_path',
+    ];
+
     public function __construct(private ImageUploadService $images) {}
 
     public function index()
@@ -21,13 +27,16 @@ class ServiceController extends Controller
                 ->map(fn ($s) => $s->only([
                     'id', 'name', 'slug', 'includes', 'has_restructuration',
                     'price', 'duration_min', 'is_active', 'position',
-                ]) + ['image' => $s->image_url]),
+                ]) + ['image' => $s->image_url, 'before' => $s->image_before_url, 'color' => $s->display_color]),
         ]);
     }
 
     public function create()
     {
-        return Inertia::render('Admin/Services/Form', ['service' => null]);
+        return Inertia::render('Admin/Services/Form', [
+            'service' => null,
+            'palette' => Service::PALETTE,
+        ]);
     }
 
     public function edit(Service $service)
@@ -35,8 +44,13 @@ class ServiceController extends Controller
         return Inertia::render('Admin/Services/Form', [
             'service' => $service->only([
                 'id', 'name', 'slug', 'includes', 'description', 'has_restructuration',
-                'price', 'duration_min', 'is_active', 'position',
-            ]) + ['image' => $service->image_url],
+                'price', 'duration_min', 'color', 'is_active', 'position',
+            ]) + [
+                'image'         => $service->image_url,
+                'before'        => $service->image_before_url,
+                'display_color' => $service->display_color,
+            ],
+            'palette' => Service::PALETTE,
         ]);
     }
 
@@ -44,8 +58,10 @@ class ServiceController extends Controller
     {
         $data = $this->validated($request);
 
-        if ($request->hasFile('image')) {
-            $data['image_path'] = $this->images->store($request->file('image'), 'services', 'service');
+        foreach (self::VISUELS as $champ => $colonne) {
+            if ($request->hasFile($champ)) {
+                $data[$colonne] = $this->images->store($request->file($champ), 'services', 'service');
+            }
         }
 
         $service = Service::create($data);
@@ -58,10 +74,12 @@ class ServiceController extends Controller
     {
         $data = $this->validated($request, $service);
 
-        if ($request->hasFile('image')) {
-            $data['image_path'] = $this->images->replace(
-                $request->file('image'), $service->image_path, 'services', 'service',
-            );
+        foreach (self::VISUELS as $champ => $colonne) {
+            if ($request->hasFile($champ)) {
+                $data[$colonne] = $this->images->replace(
+                    $request->file($champ), $service->{$colonne}, 'services', 'service',
+                );
+            }
         }
 
         $service->update($data);
@@ -83,6 +101,7 @@ class ServiceController extends Controller
         }
 
         $this->images->delete($service->image_path);
+        $this->images->delete($service->image_before_path);
         $service->delete();
 
         return back()->with('success', 'Prestation supprimée.');
@@ -98,9 +117,13 @@ class ServiceController extends Controller
             'has_restructuration' => ['boolean'],
             'price'               => ['required', 'numeric', 'min:0'],
             'duration_min'        => ['required', 'integer', 'min:5', 'max:480'],
+            // Forme stricte « #RRGGBB » : la valeur part telle quelle dans un
+            // attribut de style, elle ne doit pas pouvoir contenir autre chose.
+            'color'               => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'is_active'           => ['boolean'],
             'position'            => ['nullable', 'integer', 'min:0'],
             'image'               => ImageUploadService::rules(),
+            'image_before'        => ImageUploadService::rules(),
         ]);
     }
 }

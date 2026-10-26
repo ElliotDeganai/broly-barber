@@ -27,10 +27,8 @@ Route::get('/p/{page:slug}', [Client\PageController::class, 'show'])->name('page
 |--------------------------------------------------------------------------
 */
 Route::get('/connexion', [Auth\MagicLinkController::class, 'create'])->name('client.login');
-// 5 envois par minute était trop serré : un client qui ne voit pas l'email
-// arriver réessaie deux ou trois fois, et se retrouve bloqué sans comprendre.
 Route::post('/lien-magique', [Auth\MagicLinkController::class, 'send'])
-    ->middleware('throttle:10,1')->name('magic.send');
+    ->middleware('throttle:5,1')->name('magic.send');
 Route::get('/lien-magique/{token}', [Auth\MagicLinkController::class, 'consume'])->name('magic.consume');
 
 Route::get('/auth/{provider}/redirect', [Auth\SocialLoginController::class, 'redirect'])
@@ -88,9 +86,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('rendez-vous/{appointment}/creneaux', [Admin\AppointmentController::class, 'availableSlots'])->name('appointments.slots');
     Route::post('rendez-vous/{appointment}/contre-proposer', [Admin\AppointmentController::class, 'counterPropose'])->name('appointments.counter');
     Route::post('rendez-vous/{appointment}/realise', [Admin\AppointmentController::class, 'complete'])->name('appointments.complete');
+    Route::post('rendez-vous/{appointment}/absent', [Admin\AppointmentController::class, 'noShow'])->name('appointments.noshow');
+    Route::post('rendez-vous/{appointment}/annuler', [Admin\AppointmentController::class, 'cancel'])->name('appointments.cancel');
 
     // Disponibilités
     Route::get('disponibilites', [Admin\AvailabilityController::class, 'index'])->name('availability.index');
+    Route::post('disponibilites/horizon', [Admin\AvailabilityController::class, 'saveHorizon'])->name('availability.horizon');
+    Route::post('disponibilites/pas', [Admin\AvailabilityController::class, 'saveSlotStep'])->name('availability.step');
     Route::post('disponibilites/hebdo', [Admin\AvailabilityController::class, 'saveWeekly'])->name('availability.weekly');
     Route::post('disponibilites/pauses', [Admin\AvailabilityController::class, 'saveBreaks'])->name('availability.breaks');
     Route::post('disponibilites/exceptions', [Admin\AvailabilityController::class, 'storeException'])->name('availability.exceptions.store');
@@ -102,6 +104,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('clients/{client}/dette', [Admin\ClientController::class, 'updateDebt'])->name('clients.debt');
     Route::post('clients/{client}/blocage', [Admin\ClientController::class, 'toggleBlock'])->name('clients.block');
     Route::post('clients/{client}/lien-magique', [Admin\ClientController::class, 'sendMagicLink'])->name('clients.magic');
+
+    // Administrateurs : comptes qui accèdent au back-office
+    Route::get('administrateurs', [Admin\AdminUserController::class, 'index'])->name('admins.index');
+    Route::post('administrateurs', [Admin\AdminUserController::class, 'store'])->name('admins.store');
+    Route::post('administrateurs/promouvoir', [Admin\AdminUserController::class, 'promote'])->name('admins.promote');
+    Route::delete('administrateurs/{admin}', [Admin\AdminUserController::class, 'demote'])->name('admins.demote');
 
     // Catalogue
     Route::resource('services', Admin\ServiceController::class)->except('show');

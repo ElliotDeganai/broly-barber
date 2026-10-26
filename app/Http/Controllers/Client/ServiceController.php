@@ -20,7 +20,7 @@ class ServiceController extends Controller
             'content'  => SiteSetting::tree('services'),
             'services' => Service::active()->get([
                 'id', 'name', 'slug', 'includes', 'description',
-                'has_restructuration', 'price', 'duration_min', 'image_path',
+                'has_restructuration', 'price', 'duration_min', 'image_path', 'image_before_path',
             ]),
             'lateOffer' => [
                 'hour'       => (int) SiteSetting::get('late_night_hour', 20),

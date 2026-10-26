@@ -45,14 +45,11 @@ export default {
                     key: 'activite',
                     label: 'Activité',
                     links: [
-                        {
-                            label: 'Rendez-vous',
-                            route: 'admin.appointments.index',
-                            icon: 'calendar',
-                            // Les demandes en attente sont la seule chose qui
-                            // réclame une action : c'est là qu'on veut arriver.
-                            params: { status: 'pending' },
-                        },
+                        // Aucun paramètre : la page s'ouvre sur son état par
+                        // défaut — planning du jour, confirmés et en attente,
+                        // filtres repliés. Forcer un filtre depuis le menu le
+                        // ferait passer pour un réglage posé par l'utilisateur.
+                        { label: 'Rendez-vous',    route: 'admin.appointments.index', icon: 'calendar' },
                         { label: 'Disponibilités', route: 'admin.availability.index', icon: 'clock' },
                         { label: 'Clients',        route: 'admin.clients.index',      icon: 'user' },
                     ],
@@ -73,6 +70,13 @@ export default {
                         { label: 'Galerie', route: 'admin.gallery.index', icon: 'photo' },
                         { label: 'FAQ',     route: 'admin.faqs.index',    icon: 'help' },
                         { label: 'Contenu', route: 'admin.content.index', icon: 'pencil' },
+                    ],
+                },
+                {
+                    key: 'reglages',
+                    label: 'Réglages',
+                    links: [
+                        { label: 'Administrateurs', route: 'admin.admins.index', icon: 'settings' },
                     ],
                 },
             ]
@@ -116,8 +120,11 @@ export default {
             // garde « Prestations » actif, et les paramètres de filtre — ?status=…
             // — n'empêchent pas la mise en évidence.
             const path = new URL(route(name), window.location.origin).pathname
+            const here = this.$page.url.split('?')[0].replace(/\/$/, '')
 
-            return this.$page.url.split('?')[0].startsWith(path)
+            // « /admin » est le préfixe de toutes les autres pages : sans
+            // égalité stricte, le tableau de bord resterait allumé partout.
+            return path === '/admin' ? here === '/admin' : here.startsWith(path)
         },
         logout() {
             // Destination explicite, comme sur le site public : on ne dépend

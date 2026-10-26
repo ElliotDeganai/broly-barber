@@ -34,7 +34,7 @@ class BookingController extends Controller
         return Inertia::render('Booking/Services', [
             'services' => Service::active()->get([
                 'id', 'name', 'slug', 'includes', 'description',
-                'has_restructuration', 'price', 'duration_min', 'image_path',
+                'has_restructuration', 'price', 'duration_min', 'image_path', 'image_before_path',
             ]),
             'lateOffer' => [
                 'hour'       => (int) SiteSetting::get('late_night_hour', 20),
@@ -56,6 +56,13 @@ class BookingController extends Controller
             'from'    => $from->toDateString(),
             'slots'   => $this->availability->slotsFor($service, $from, $from->addDays($days)),
             'quote'   => $this->pricing->quote($request->user(), $service),
+
+            // Dernier jour réservable, et profondeur en jours. Le calendrier
+            // laisse naviguer librement : il doit pouvoir distinguer un jour
+            // complet d'un jour pas encore ouvert, et dire quand il le sera.
+            'horizon'     => $from->addDays($days)->toDateString(),
+            'horizonDays' => $days,
+            'today'       => CarbonImmutable::today()->toDateString(),
         ]);
     }
 

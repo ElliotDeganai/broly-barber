@@ -17,10 +17,13 @@ class BlockingService
             return false;
         }
 
+        // L'absence sans prévenir pèse autant qu'une annulation tardive :
+        // dans les deux cas le créneau est perdu pour le studio.
         $strikes = Appointment::where('user_id', $user->id)
-            ->where('status', Appointment::CANCELLED)
-            ->where('cancelled_by', 'client')
             ->where('cancelled_at', '>=', now()->subMonths(6))
+            ->where(fn ($q) => $q
+                ->where(fn ($c) => $c->where('status', Appointment::CANCELLED)->where('cancelled_by', 'client'))
+                ->orWhere('status', Appointment::NO_SHOW))
             ->count();
 
         return $strikes >= $threshold;

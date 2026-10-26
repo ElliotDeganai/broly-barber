@@ -23,8 +23,46 @@ use Carbon\CarbonPeriod;
  */
 class AvailabilityService
 {
-    /** Pas de la grille : un RDV de 45 min peut démarrer à 10:00, 10:15, 10:30... */
+    /** Pas par défaut de la grille : un RDV de 45 min peut démarrer à 10:00, 10:15... */
     public const GRID_STEP = 15;
+
+    /** Pas proposés au barbier, du quart d'heure à l'heure pleine. */
+    public const STEPS = [15, 30, 45, 60];
+
+    /**
+     * Pas effectif de la grille de réservation.
+     *
+     * Réglable depuis les disponibilités : un salon qui ne prend de rendez-vous
+     * qu'à l'heure pleine n'a pas à voir proposer 10h15 à ses clients.
+     */
+    public static function step(): int
+    {
+        $pas = (int) SiteSetting::get('booking_slot_step', self::GRID_STEP);
+
+        return in_array($pas, self::STEPS, true) ? $pas : self::GRID_STEP;
+    }
+
+    /**
+     * Premier départ possible de la plage.
+     *
+     * Pour un pas qui tuile l'heure — 15, 30, 60 — la grille est calée sur
+     * minuit : un salon ouvrant à 9h30 avec un pas d'une heure propose 10h et
+     * non 9h30, ce qui est bien le sens de « à l'heure pile ».
+     *
+     * Pour 45 minutes, ce calage ferait perdre le premier créneau : 10h n'est
+     * pas un multiple de 45 depuis minuit, et un salon ouvrant à 10h verrait
+     * sa première heure sautée. Le compte part donc de l'ouverture.
+     */
+    private function alignOnGrid(CarbonImmutable $moment, int $step): CarbonImmutable
+    {
+        if (60 % $step !== 0) {
+            return $moment;
+        }
+
+        $reste = ($moment->hour * 60 + $moment->minute) % $step;
+
+        return $reste === 0 ? $moment : $moment->addMinutes($step - $reste);
+    }
 
     /** @return array<string, string[]>  ['2026-08-12' => ['10:00', '10:45'], ...] */
     public function slotsFor(Service $service, CarbonImmutable $from, CarbonImmutable $to): array
@@ -33,6 +71,7 @@ class AvailabilityService
         $to   = $to->endOfDay();
 
         $notBefore = CarbonImmutable::now()->addHours((int) SiteSetting::get('booking_lead_hours', 2));
+        $step      = self::step();
         $busy      = $this->busyIntervals($from, $to);
         $out       = [];
 
@@ -41,7 +80,7 @@ class AvailabilityService
             $slots = [];
 
             foreach ($this->openRangesFor($day) as [$start, $end]) {
-                $cursor = $start;
+                $cursor = $this->alignOnGrid($start, $step);
 
                 while ($cursor->addMinutes($service->duration_min)->lessThanOrEqualTo($end)) {
                     $slotEnd = $cursor->addMinutes($service->duration_min);
@@ -50,7 +89,7 @@ class AvailabilityService
                         $slots[] = $cursor->format('H:i');
                     }
 
-                    $cursor = $cursor->addMinutes(self::GRID_STEP);
+                    $cursor = $cursor->addMinutes($step);
                 }
             }
 

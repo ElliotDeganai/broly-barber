@@ -40,7 +40,11 @@ export default {
                 </div>
 
                 <div class="row-main">
-                    <p class="row-title">{{ service.name }}</p>
+                    <p class="row-title">
+                        <span class="dot" :style="{ background: service.color }"
+                              :title="`Couleur dans le planning : ${service.color}`"></span>
+                        {{ service.name }}
+                    </p>
                     <p class="row-meta">
                         <span v-if="service.includes">{{ service.includes }} · </span>
                         {{ service.duration_min }} min · {{ money(service.price) }}

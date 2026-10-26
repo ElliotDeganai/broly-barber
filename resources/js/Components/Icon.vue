@@ -15,6 +15,11 @@ const PATHS = {
     alert:    '<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5M12 16h.01"/>',
     plus:     '<path d="M12 5v14M5 12h14"/>',
     close:    '<path d="M6 6l12 12M18 6L6 18"/>',
+    // Statuts du planning
+    closeRing:  '<circle cx="12" cy="12" r="9"/><path d="M8.8 8.8l6.4 6.4M15.2 8.8l-6.4 6.4"/>',
+    checkTwice: '<path d="M2.5 12.5 6 16l6.5-6.5"/><path d="M10.5 16 12 17.5 21 8.5"/>',
+    swap:       '<path d="M4 8.5h13M14 5.5l3 3-3 3"/><path d="M20 15.5H7M10 12.5l-3 3 3 3"/>',
+    userOff:    '<circle cx="10" cy="8" r="3.4"/><path d="M3.5 20a6.5 6.5 0 0 1 9.2-5.9"/><path d="M15.5 15.5l5 5M20.5 15.5l-5 5"/>',
     left:     '<path d="M15 5l-7 7 7 7"/>',
     right:    '<path d="M9 5l7 7-7 7"/>',
     zoom:     '<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5M11 8v6M8 11h6"/>',

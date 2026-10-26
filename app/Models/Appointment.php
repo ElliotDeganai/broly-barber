@@ -16,6 +16,8 @@ class Appointment extends Model
     public const COUNTER_ACCEPTED = 'counter_accepted';
     public const COUNTER_REFUSED  = 'counter_refused';
     public const COMPLETED        = 'completed';
+    /** Rendez-vous confirmé mais client absent : distinct d'une annulation. */
+    public const NO_SHOW          = 'no_show';
 
     /** Statuts qui occupent le fauteuil : utilisés pour l'anti-chevauchement. */
     public const BLOCKING = [

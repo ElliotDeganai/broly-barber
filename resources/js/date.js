@@ -9,16 +9,27 @@ export const STUDIO_TZ = 'Europe/Paris'
 
 const opts = (extra) => ({ timeZone: STUDIO_TZ, ...extra })
 
+/**
+ * Date longue, avec l'ordinal du premier du mois.
+ *
+ * « 1 novembre » n'existe pas en français ; toLocaleDateString ne connaît pas
+ * l'exception, on reconstruit donc la chaîne à partir de ses morceaux plutôt
+ * que de bricoler une expression régulière sur le résultat — « 1 » pourrait
+ * aussi bien être le début d'une année.
+ */
+function enClair(value, extra) {
+    return new Intl.DateTimeFormat('fr-FR', opts(extra))
+        .formatToParts(new Date(value))
+        .map((part) => (part.type === 'day' && part.value === '1' ? '1er' : part.value))
+        .join('')
+}
+
 export function formatDate(value) {
-    return new Date(value).toLocaleDateString('fr-FR', opts({
-        weekday: 'short', day: 'numeric', month: 'short',
-    }))
+    return enClair(value, { weekday: 'short', day: 'numeric', month: 'short' })
 }
 
 export function formatDateLong(value) {
-    return new Date(value).toLocaleDateString('fr-FR', opts({
-        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-    }))
+    return enClair(value, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 }
 
 export function formatTime(value) {

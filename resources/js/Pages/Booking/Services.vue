@@ -1,12 +1,13 @@
 <script>
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { Link } from '@inertiajs/vue3'
+import BeforeAfter from '@/Components/BeforeAfter.vue'
 import { money } from '@/date'
 
 /** Étape 1 du tunnel : choix de la prestation, avec ce qui est compris. */
 export default {
     layout: AppLayout,
-    components: { Link },
+    components: { Link, BeforeAfter },
 
     props: {
         services:  { type: Array,  default: () => [] },
@@ -17,6 +18,10 @@ export default {
         money,
         imageUrl(service) {
             return service.image_path ? `/storage/${service.image_path}` : null
+        },
+
+        beforeUrl(service) {
+            return service.image_before_path ? `/storage/${service.image_before_path}` : null
         },
     },
 }
@@ -34,7 +39,14 @@ export default {
         <div class="service-list">
             <article v-for="service in services" :key="service.id" class="card service-card reveal"
                      style="padding: 16px">
-                <div class="service-visual skeleton" v-if="imageUrl(service)">
+                <BeforeAfter
+                    v-if="beforeUrl(service) && imageUrl(service)"
+                    :before="beforeUrl(service)"
+                    :after="imageUrl(service)"
+                    :alt="service.name"
+                />
+
+                <div class="service-visual skeleton" v-else-if="imageUrl(service)">
                     <img :src="imageUrl(service)" :alt="service.name" loading="lazy" decoding="async">
                 </div>
 

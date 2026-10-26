@@ -1,6 +1,7 @@
 <script>
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { Link } from '@inertiajs/vue3'
+import BeforeAfter from '@/Components/BeforeAfter.vue'
 
 /**
  * Prestations. Chaque carte annonce ce qui est compris — avec ou sans
@@ -8,7 +9,7 @@ import { Link } from '@inertiajs/vue3'
  */
 export default {
     layout: AppLayout,
-    components: { Link },
+    components: { Link, BeforeAfter },
 
     props: {
         content:   { type: Object, default: () => ({}) },
@@ -43,6 +44,10 @@ export default {
         imageUrl(service) {
             return service.image_path ? `/storage/${service.image_path}` : null
         },
+
+        beforeUrl(service) {
+            return service.image_before_path ? `/storage/${service.image_before_path}` : null
+        },
     },
 }
 </script>
@@ -56,7 +61,16 @@ export default {
 
         <div class="service-list">
             <article v-for="service in services" :key="service.id" class="service-card reveal">
-                <div class="service-visual skeleton">
+                <!-- Avant/après seulement si les deux visuels existent : un
+                     couple bancal vaut moins qu'une image seule. -->
+                <BeforeAfter
+                    v-if="beforeUrl(service) && imageUrl(service)"
+                    :before="beforeUrl(service)"
+                    :after="imageUrl(service)"
+                    :alt="service.name"
+                />
+
+                <div class="service-visual skeleton" v-else>
                     <img v-if="imageUrl(service)" :src="imageUrl(service)" :alt="service.name"
                          loading="lazy" decoding="async">
                 </div>
