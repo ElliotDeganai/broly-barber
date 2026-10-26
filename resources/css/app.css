@@ -1030,7 +1030,12 @@ input[type="radio"]:disabled { opacity: .4; cursor: not-allowed; }
    largeur de son contenu et la carte déborde sur les écrans étroits. */
 .ba-wrap { min-width: 0; }
 .ba { position: relative; margin-bottom: 8px; }
-.ba img { position: absolute; inset: 0; }
+/* Les deux visuels se superposent. Avec le chargement progressif, c'est
+   l'enveloppe .smart-img qui se cale, pas la balise interne : la découpe et
+   l'opacité portent sur elle, sinon l'aperçu flou échapperait à l'animation. */
+.ba > img, .ba > .smart-img { position: absolute; inset: 0; }
+/* Visuels détourés : pas de fond opaque derrière, comme pour .service-visual */
+.ba > .smart-img { background: transparent; }
 
 /* L'avant recouvre l'après et se retire par la gauche à mesure que --p monte */
 .ba .ba-avant { z-index: 2; clip-path: inset(0 0 0 calc(var(--p, 0) * 100%)); opacity: var(--o, 1); }

@@ -2,6 +2,7 @@
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Icon from '@/Components/Icon.vue'
 import SmartImage from '@/Components/SmartImage.vue'
+import BeforeAfter from '@/Components/BeforeAfter.vue'
 import Reveal from '@/Components/Reveal.vue'
 import revealOnce from '@/revealOnce'
 import { Link } from '@inertiajs/vue3'
@@ -17,7 +18,7 @@ import { formatDateLong, formatTime, money } from '@/date'
 export default {
     layout: (h, page) => h(AppLayout, { flush: true }, () => page),
 
-    components: { Icon, SmartImage, Reveal, Link },
+    components: { Icon, SmartImage, Reveal, Link, BeforeAfter },
     mixins: [revealOnce],
 
     props: {
@@ -209,7 +210,16 @@ export default {
 
         <div class="service-list">
             <article v-for="service in services" :key="service.id" class="service-card reveal">
-                <div class="service-visual">
+                <!-- Avant/après dès que les deux visuels existent -->
+                <BeforeAfter
+                    v-if="service.before && service.image"
+                    :before-image="service.before"
+                    :after-image="service.image"
+                    :alt="service.name"
+                    sizes="(min-width: 1024px) 340px, 90vw"
+                />
+
+                <div class="service-visual" v-else>
                     <SmartImage :image="service.image" :alt="service.name" sizes="(min-width: 1024px) 340px, 90vw" />
                 </div>
 

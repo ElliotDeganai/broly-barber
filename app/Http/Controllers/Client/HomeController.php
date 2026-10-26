@@ -32,11 +32,18 @@ class HomeController extends Controller
 
             'services' => Service::active()->get([
                 'id', 'name', 'slug', 'includes', 'description',
-                'has_restructuration', 'price', 'duration_min', 'image_path',
+                'has_restructuration', 'price', 'duration_min',
+                'image_path', 'image_before_path',
             ])->map(fn ($service) => $service->only([
                 'id', 'name', 'slug', 'includes', 'description',
                 'has_restructuration', 'price', 'duration_min',
-            ]) + ['image' => ImagePayload::make($service->image_path)]),
+            ]) + [
+                'image' => ImagePayload::make($service->image_path),
+                // Visuel « avant » : même traitement progressif que l'autre,
+                // sans quoi l'accueil chargerait une image pleine résolution
+                // de plus par prestation.
+                'before' => ImagePayload::make($service->image_before_path),
+            ]),
 
             // Quatre produits en aperçu : la page boutique montre tout
             'products' => ProductCategory::with('products')->orderBy('position')->get()

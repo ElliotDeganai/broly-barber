@@ -47,11 +47,21 @@ function debrancher(maj) {
     abonnes.delete(maj)
 }
 
+import SmartImage from '@/Components/SmartImage.vue'
+
 export default {
+    components: { SmartImage },
+
     props: {
-        before: { type: String, required: true },
-        after:  { type: String, required: true },
-        alt:    { type: String, default: '' },
+        // Deux façons de fournir les visuels : une URL simple, ou l'objet
+        // produit par ImagePayload — aperçu flou et déclinaisons comprises.
+        before:      { type: String, default: null },
+        after:       { type: String, default: null },
+        beforeImage: { type: Object, default: null },
+        afterImage:  { type: Object, default: null },
+        alt:         { type: String, default: '' },
+        // Largeur d'affichage prévue, pour le choix de la déclinaison
+        sizes:       { type: String, default: '100vw' },
     },
 
     data() {
@@ -95,6 +105,11 @@ export default {
             if (this.choix) return this.choix
 
             return this.part > 0.5 ? 'apres' : 'avant'
+        },
+
+        /** Chargement progressif dès que les deux objets sont fournis. */
+        progressif() {
+            return Boolean(this.beforeImage && this.afterImage)
         },
 
     },
@@ -164,10 +179,17 @@ export default {
     <div class="ba-wrap">
         <div class="service-visual ba" :class="{ 'is-fige': choix, 'is-intro': intro }" ref="cadre"
              :style="{ '--p': decoupe, '--o': opacite }">
-            <img class="ba-apres" :src="after" :alt="alt" loading="lazy" decoding="async">
             <!-- L'avant double l'après pour les lecteurs d'écran : une seule
                  description suffit, c'est la même prestation. -->
-            <img class="ba-avant" :src="before" alt="" aria-hidden="true" loading="lazy" decoding="async">
+            <template v-if="progressif">
+                <SmartImage class="ba-apres" :image="afterImage" :alt="alt" :sizes="sizes" />
+                <SmartImage class="ba-avant" :image="beforeImage" alt="" :sizes="sizes" />
+            </template>
+
+            <template v-else>
+                <img class="ba-apres" :src="after" :alt="alt" loading="lazy" decoding="async">
+                <img class="ba-avant" :src="before" alt="" aria-hidden="true" loading="lazy" decoding="async">
+            </template>
 
             <!-- Plus de séparation une fois en fondu : il n'y a plus rien à séparer -->
             <span class="ba-ligne" v-if="!mouvementReduit && !choix"></span>
