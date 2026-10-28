@@ -1635,7 +1635,19 @@ input[type="radio"]:disabled { opacity: .4; cursor: not-allowed; }
 .row-item > * { min-width: 0; }
 .row-item:last-child { border-bottom: none; }
 .row-main { flex: 1 1 220px; min-width: 0; }
-.row-title { font-family: var(--font-accent); font-size: 14px; margin: 0 0 4px; }
+/* Le statut appartient au rendez-vous, pas aux actions : il se lit avec le
+   nom du client. Interligne desserré, pour que deux pastilles qui passent à
+   la ligne ne viennent pas toucher celle du dessus. */
+.row-title { font-family: var(--font-accent); font-size: 14px; line-height: 1.7; margin: 0 0 4px; }
+.row-title .badge { margin-left: 8px; padding: 3px 10px; font-size: 11px; }
+
+/* Pastille de prestation en tête de ligne : même couleur que la légende et
+   que le pavé du planning, pour relier la liste à la grille du dessus. */
+.row-dot {
+    display: inline-block; vertical-align: middle;
+    width: 10px; height: 10px; border-radius: 3px;
+    margin: -2px 8px 0 0;
+}
 .row-meta { font-size: 13px; color: var(--muted); margin: 0; }
 .row-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 
@@ -1718,6 +1730,17 @@ input[type="radio"]:disabled { opacity: .4; cursor: not-allowed; }
 /* Nombre de créneaux encore libres, sous le numéro du jour */
 .month-free { font-family: var(--font-accent); font-size: 10px; color: var(--green); margin-top: 2px; }
 .month-cell[disabled] { cursor: not-allowed; }
+
+/* Jour portant déjà un créneau retenu, dans une contre-proposition : la
+   marque subsiste quand on part explorer un autre jour, sinon on perd de vue
+   ce qu'on a déjà choisi — et la sélection peut couvrir trois jours. */
+.month-cell.has-pick { position: relative; }
+.month-cell.has-pick::after {
+    content: '';
+    position: absolute; top: 4px; right: 4px;
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green);
+}
 
 /* Créneaux : tuiles compactes. Des .btn pleine taille donneraient douze gros
    appels à l'action, et leurs capitales afficheraient « 10H00 ». */
@@ -2388,6 +2411,9 @@ table.admin-table { width: 100%; border-collapse: collapse; font-size: 14px; }
     overflow: hidden;
     cursor: pointer;
     box-sizing: border-box;
+    /* Le pavé devient sa propre référence de largeur : chaque ligne peut
+       alors décider si elle tient, sans que le composant ait à mesurer. */
+    container-type: inline-size;
 }
 .tl-event:hover { filter: brightness(1.12); }
 
@@ -2395,24 +2421,47 @@ table.admin-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .tl-ico { position: absolute; top: 50%; right: 4px; transform: translateY(-50%); opacity: .9; }
 .tl-event:not(.is-tiny) .tl-ico { top: 3px; transform: none; }
 
-.tl-line1 { display: flex; align-items: baseline; gap: 5px; padding-right: 17px; min-width: 0; }
-.tl-event-time { font-family: var(--font-accent); font-size: 9px; opacity: .8; flex: 0 0 auto; }
-.tl-event-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tl-event-serv { opacity: .8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 17px; }
+/* Trois lignes empilées : plage horaire, client, prestation. Chacune se
+   tronque proprement plutôt que de pousser les autres hors du pavé. Seule
+   la première réserve la place de l'icône, qui se pose à sa hauteur. */
+.tl-event-time {
+    font-family: var(--font-accent);
+    font-size: 9px; opacity: .85;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    padding-right: 17px; flex: 0 0 auto;
+}
+.tl-event-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.tl-event-serv { opacity: .8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 
 /* Le contenu suit la hauteur réelle du pavé : mieux vaut une ligne entière
-   que trois lignes tranchées au milieu. */
-.tl-event.is-tiny { justify-content: center; }
+   que trois lignes tranchées au milieu. Sur un quart d'heure, tout repasse
+   sur une seule ligne, l'heure de fin et la prestation cèdent la place. */
+.tl-event.is-tiny {
+    flex-direction: row; align-items: baseline; gap: 5px;
+    padding: 1px 19px 1px 6px;
+    /* Un quart d'heure ne mesure qu'une douzaine de pixels sur un téléphone :
+       l'interligne doit tomber à la hauteur exacte du texte, sans quoi les
+       jambages sont rognés par le bas du pavé. */
+    line-height: 1;
+}
+.tl-event.is-tiny .tl-event-time { padding-right: 0; }
+.tl-event.is-tiny .tl-event-end,
 .tl-event.is-tiny .tl-event-serv,
 .tl-event.is-short .tl-event-serv { display: none; }
+
+/* Pavé étroit — semaine chargée, créneaux qui se chevauchent : « 10h – 10h30 »
+   y serait coupé en plein milieu. Les lignes se retirent une à une, de la
+   moins utile à la plus utile, jusqu'à ne laisser que la couleur et l'icône. */
+@container (max-width: 104px) { .tl-event-end  { display: none; } }
+@container (max-width:  76px) { .tl-event-serv { display: none; } }
+@container (max-width:  58px) { .tl-event-time { display: none; } }
+@container (max-width:  40px) { .tl-event-name { display: none; } }
 
 /* En attente : le trait pointillé dit que rien n'est encore acquis */
 .tl-event.is-pending { border-style: dashed; border-width: 1.5px; }
 
 /* Annulé, refusé, non honoré : contour vide, le créneau ne tient plus */
 .tl-event.is-off .tl-event-name { text-decoration: line-through; }
-.tl-event-time { font-family: var(--font-accent); font-size: 9px; opacity: .85; padding-right: 10px; }
-.tl-event-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
 
 @media (max-width: 520px) {
     .month-dots { display: none; }
@@ -2423,7 +2472,8 @@ table.admin-table { width: 100%; border-collapse: collapse; font-size: 14px; }
     .tl-corner, .tl-gutter { flex-basis: 34px; }
     .tl-gutter span { right: 5px; font-size: 9px; }
     .tl-day-num { font-size: 13px; }
-    /* Sept colonnes étroites : l'heure suffit, le nom déborderait */
+    /* Sept colonnes sur un écran de téléphone : ce qui ne tient pas se
+       retire tout seul, les requêtes de conteneur s'en chargent. */
     .tl-event-time { font-size: 8px; }
     .tl-event { padding: 2px 4px; font-size: 9px; }
 }
@@ -2810,26 +2860,13 @@ table.admin-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .counter-panel {
     flex: 1 1 100%;
     /* min-width: 0 obligatoire. Par défaut un élément flex vaut min-width: auto
-       et refuse de rétrécir sous la largeur de son contenu : la bande de jours,
-       plus large que la ligne, la faisait déborder au lieu de défiler. */
+       et refuse de rétrécir sous la largeur de son contenu : la grille des
+       créneaux élargissait la ligne au lieu de se replier. */
     min-width: 0;
     width: 100%;
     border-top: 1px solid var(--border);
     padding-top: 14px;
 }
-
-.counter-days {
-    display: flex;
-    gap: 6px;
-    max-width: 100%;
-    overflow-x: auto;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    padding-bottom: 8px;
-    margin-bottom: 12px;
-}
-.counter-days::-webkit-scrollbar { display: none; }
-.counter-days .badge { flex: 0 0 auto; cursor: pointer; }
 
 .counter-slots {
     display: grid;

@@ -2,7 +2,7 @@
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import Icon from '@/Components/Icon.vue'
 import { Link, router, useForm } from '@inertiajs/vue3'
-import { formatDateTime, formatDateLong, formatMonth, money, STUDIO_TZ } from '@/date'
+import { formatDate, formatDateTime, formatDateLong, formatMonth, money, STUDIO_TZ } from '@/date'
 import { statusLabel, statusClass, statusIcon, isPending, isWarning, STATUS_FILTERS, STATUS_LEGEND } from '@/status'
 
 /**
@@ -42,6 +42,10 @@ export default {
             // Créneaux libres reçus du serveur, groupés par jour
             counterSlots: {},
             counterDay: null,
+            // Bornes de la fenêtre explorée, et mois affiché par le calendrier
+            counterToday: null,
+            counterHorizon: null,
+            counterMonth: null,
             counterPicked: [],
             counterLoading: false,
             refuseFor: null,
@@ -104,6 +108,67 @@ export default {
 
         counterDays() {
             return Object.keys(this.counterSlots)
+        },
+
+        counterMonthLabel() {
+            return this.counterMonth ? formatMonth(this.counterMonth) : ''
+        },
+
+        /** Cases vides avant le 1er, pour que le mois tombe sur le bon jour. */
+        counterBlanks() {
+            if (!this.counterMonth) return 0
+
+            const [y, m] = this.counterMonth.split('-').map(Number)
+
+            // Construction explicite : new Date('2026-11-01') serait lu en UTC
+            // et pourrait basculer d'un jour selon le fuseau du poste.
+            return (new Date(y, m - 1, 1).getDay() + 6) % 7
+        },
+
+        /**
+         * Jours du mois affiché, avec le nombre de créneaux libres.
+         *
+         * Mêmes états que le calendrier du tunnel client, et pour la même
+         * raison : « complet » et « hors horizon » n'appellent pas la même
+         * décision. Le premier dit d'essayer un autre jour, le second que la
+         * fenêtre d'ouverture s'arrête là.
+         */
+        counterCells() {
+            if (!this.counterMonth) return []
+
+            const [y, m] = this.counterMonth.split('-').map(Number)
+            const dernier = new Date(y, m, 0).getDate()
+            const out = []
+
+            for (let n = 1; n <= dernier; n++) {
+                const date = `${y}-${String(m).padStart(2, '0')}-${String(n).padStart(2, '0')}`
+                const free = (this.counterSlots[date] || []).length
+
+                let state = 'free'
+
+                if (free === 0) {
+                    if (this.counterToday && date < this.counterToday) state = 'past'
+                    else if (this.counterHorizon && date > this.counterHorizon) state = 'later'
+                    else state = 'full'
+                }
+
+                out.push({ date, number: n, free, state })
+            }
+
+            return out
+        },
+
+        counterMonthHasFree() {
+            return this.counterCells.some((c) => c.free > 0)
+        },
+
+        counterMonthHasLater() {
+            return this.counterCells.some((c) => c.state === 'later')
+        },
+
+        /** Jours déjà retenus, pour les signaler dans la grille. */
+        counterPickedDays() {
+            return this.counterPicked.map((p) => p.slice(0, 10))
         },
 
         /**
@@ -335,10 +400,18 @@ export default {
             this.ro.observe(el)
         },
 
+        /**
+         * Ce que la hauteur du pavé permet d'écrire.
+         *
+         * Trois paliers, mesurés en pixels réels : une ligne (heure de début
+         * et nom), deux lignes (plage horaire puis nom), trois lignes (plage,
+         * nom, prestation). La largeur est traitée à part, en CSS — un pavé
+         * haut mais étroit n'a pas la place d'une heure de fin.
+         */
         density(duree) {
             const px = (duree / this.timeline.span) * (this.colsHeight || 560)
 
-            return px < 34 ? 'is-tiny' : (px < 58 ? 'is-short' : 'is-full')
+            return px < 32 ? 'is-tiny' : (px < 50 ? 'is-short' : 'is-full')
         },
 
         /**
@@ -537,6 +610,31 @@ export default {
             return m ? `${h}h${String(m).padStart(2, '0')}` : `${h}h`
         },
 
+        /** Fin de la prestation : début plus durée, pas de champ à ajouter. */
+        endLabel(a) {
+            return this.hourLabel(a.start_min + a.duration_min)
+        },
+
+        /**
+         * Jour et plage horaire d'un rendez-vous, pour la liste.
+         *
+         * Construits à partir de `date`, `start_min` et `duration_min` — les
+         * trois valeurs que le serveur calcule déjà dans le fuseau du studio
+         * et sur lesquelles le planning s'appuie. Passer par l'horodatage ISO
+         * ferait dépendre la liste du décalage du navigateur : le même
+         * rendez-vous pourrait alors être annoncé à 10h sur le planning et à
+         * 11h deux centimètres plus bas.
+         *
+         * Midi UTC pour le nom du jour : le formateur force Europe/Paris, une
+         * heure nue serait lue dans le fuseau du poste et pourrait basculer
+         * la veille depuis un fuseau très à l'ouest.
+         */
+        slotLabel(a) {
+            const jour = formatDate(`${a.date}T12:00:00Z`)
+
+            return `${jour} · ${this.hourLabel(a.start_min)} – ${this.endLabel(a)}`
+        },
+
         /** Un clic sur un bloc amène la fiche correspondante à l'écran. */
         focusAppointment(id) {
             const el = this.$refs['appointment' + id]?.[0]
@@ -664,7 +762,16 @@ export default {
                 const data = await response.json()
 
                 this.counterSlots = data.slots || {}
+                this.counterToday = data.today || null
+                this.counterHorizon = data.horizon || null
                 this.counterDay = Object.keys(this.counterSlots)[0] || null
+
+                // Le calendrier s'ouvre sur le mois du premier jour
+                // réservable, pas sur le mois courant : démarrer sur un mois
+                // sans aucun créneau serait une impasse.
+                const ancre = this.counterDay || this.counterToday
+
+                this.counterMonth = ancre ? `${ancre.slice(0, 7)}-01` : null
             } catch {
                 // Échec du chargement : on referme plutôt que d'afficher un
                 // sélecteur vide, qui laisserait croire à l'absence de créneaux.
@@ -673,6 +780,22 @@ export default {
             } finally {
                 this.counterLoading = false
             }
+        },
+
+        /**
+         * Navigation libre dans les mois.
+         *
+         * Aucune borne : un mois hors de l'horizon s'affiche simplement en
+         * pointillés, ce que la mention sous la grille explique. Bloquer les
+         * flèches laisserait croire que le calendrier est cassé.
+         */
+        shiftCounterMonth(delta) {
+            const [y, m] = this.counterMonth.split('-').map(Number)
+            const d = new Date(y, m - 1, 1)
+
+            d.setMonth(d.getMonth() + delta)
+
+            this.counterMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
         },
 
         /** Trois créneaux au maximum, un second clic retire la sélection. */
@@ -689,6 +812,14 @@ export default {
 
         isPicked(day, time) {
             return this.counterPicked.includes(`${day} ${time}:00`)
+        },
+
+        /** Pourquoi un jour n'est pas cliquable : trois raisons, trois messages. */
+        counterCellTitle(cell) {
+            if (cell.state === 'free')  return `${cell.free} créneau(x) libre(s)`
+            if (cell.state === 'later') return "Au-delà de l'horizon d'ouverture"
+
+            return cell.state === 'past' ? 'Date passée' : 'Aucun créneau'
         },
 
         submitCounter() {
@@ -904,14 +1035,16 @@ export default {
                             class="tl-event"
                             :class="eventClass(a)"
                             :style="eventStyle(a)"
-                            :title="`${a.client} — ${a.service} · ${statusLabel(a.status)}`"
+                            :title="`${hourLabel(a.start_min)} – ${endLabel(a)} · ${a.client} — ${a.service} · ${statusLabel(a.status)}`"
                             @click="focusAppointment(a.id)"
                         >
                             <span class="tl-ico"><Icon :name="statusIcon(a.status)" :size="12" /></span>
-                            <span class="tl-line1">
-                                <span class="tl-event-time">{{ hourLabel(a.start_min) }}</span>
-                                <span class="tl-event-name">{{ a.client }}</span>
-                            </span>
+
+                            <!-- Chaque ligne s'efface d'elle-même quand le pavé
+                                 n'a plus la place : la hauteur pilote le nombre
+                                 de lignes, la largeur ce qui tient dessus. -->
+                            <span class="tl-event-time">{{ hourLabel(a.start_min) }}<span class="tl-event-end"> – {{ endLabel(a) }}</span></span>
+                            <span class="tl-event-name">{{ a.client }}</span>
                             <span class="tl-event-serv">{{ a.service }}</span>
                         </button>
                     </div>
@@ -948,9 +1081,14 @@ export default {
                 :class="{ 'is-focused': focus && focus.id === a.id }"
             >
                 <div class="row-main">
+                    <!-- Début ET fin : une heure seule se lit aussi bien comme
+                         l'ouverture du créneau que comme sa clôture. La pastille
+                         reprend la couleur de la légende, pour relier la ligne
+                         au pavé correspondant du planning. -->
                     <p class="row-title">
-                        {{ formatDateTime(a.starts_at) }} — {{ a.client }}
-                        <span v-if="a.is_late_night" class="badge badge--yellow" style="margin-left: 8px">Tarif ×2</span>
+                        <span class="row-dot" :style="{ background: a.service_color }"></span>{{ slotLabel(a) }} — {{ a.client }}
+                        <span class="badge" :class="statusClass(a.status)">{{ statusLabel(a.status) }}</span>
+                        <span v-if="a.is_late_night" class="badge badge--yellow">Tarif ×2</span>
                     </p>
                     <p class="row-meta">
                         {{ a.service }} · {{ a.duration_min }} min · {{ money(a.total_due) }}
@@ -962,8 +1100,6 @@ export default {
                         <span v-for="p in a.proposals" :key="p.id">{{ formatDateTime(p.starts_at) }} </span>
                     </p>
                 </div>
-
-                <span class="badge" :class="statusClass(a.status)">{{ statusLabel(a.status) }}</span>
 
                 <div class="row-actions">
                     <button v-if="a.status === 'pending'" type="button" class="btn btn--solid btn--sm"
@@ -997,19 +1133,68 @@ export default {
                             Seules les disponibilités réelles pour cette prestation sont proposées.
                         </p>
 
-                        <div class="counter-days">
-                            <button
-                                v-for="d in counterDays"
-                                :key="d"
-                                type="button"
-                                class="badge"
-                                :class="counterDay === d ? 'badge--yellow' : 'badge--green'"
-                                style="border: none"
-                                @click="counterDay = d"
-                            >{{ formatDateLong(d) }}</button>
+                        <!-- Même calendrier que le tunnel client : une bande de
+                             jours obligeait à faire défiler un mois entier pour
+                             atteindre la semaine suivante. -->
+                        <div class="book-cal">
+                            <div class="month-nav">
+                                <button type="button" class="btn-icon" aria-label="Mois précédent"
+                                        @click="shiftCounterMonth(-1)">
+                                    <Icon name="left" :size="20" />
+                                </button>
+                                <span>{{ counterMonthLabel }}</span>
+                                <button type="button" class="btn-icon" aria-label="Mois suivant"
+                                        @click="shiftCounterMonth(1)">
+                                    <Icon name="right" :size="20" />
+                                </button>
+                            </div>
+
+                            <div class="month-grid">
+                                <span v-for="label in weekdays" :key="label" class="month-head">{{ label }}</span>
+
+                                <span v-for="n in counterBlanks" :key="`cblank${n}`" class="month-blank"></span>
+
+                                <button
+                                    v-for="cell in counterCells"
+                                    :key="cell.date"
+                                    type="button"
+                                    class="month-cell"
+                                    :class="{
+                                        'is-closed': cell.state === 'past' || cell.state === 'full',
+                                        'is-later': cell.state === 'later',
+                                        'is-selected': counterDay === cell.date,
+                                        'has-pick': counterPickedDays.includes(cell.date),
+                                    }"
+                                    :disabled="!cell.free"
+                                    :aria-pressed="counterDay === cell.date"
+                                    :title="counterCellTitle(cell)"
+                                    @click="counterDay = cell.date"
+                                >
+                                    <span>{{ cell.number }}</span>
+                                    <span class="month-free" v-if="cell.free">{{ cell.free }}</span>
+                                </button>
+                            </div>
                         </div>
 
-                        <div class="counter-slots" v-if="counterDay">
+                        <p class="field-help" style="margin-top: 12px">
+                            Le chiffre sous chaque jour indique le nombre de créneaux libres.
+                            <template v-if="counterMonthHasLater">
+                                Les jours en pointillés sont au-delà de l'horizon d'ouverture.
+                            </template>
+                        </p>
+
+                        <p class="empty-state" v-if="!counterMonthHasFree" style="padding: 14px 10px">
+                            Aucun créneau en {{ counterMonthLabel }}.
+                        </p>
+
+                        <!-- Le jour choisi est rappelé : après un changement de
+                             mois, la grille et la liste ne montrent plus la
+                             même période. -->
+                        <div class="day-head" v-if="counterDay" style="margin: 16px 0 10px">
+                            <strong>{{ formatDateLong(counterDay) }}</strong>
+                        </div>
+
+                        <div class="counter-slots" v-if="counterDay && counterSlots[counterDay]">
                             <button
                                 v-for="t in counterSlots[counterDay]"
                                 :key="t"

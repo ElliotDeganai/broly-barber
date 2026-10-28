@@ -200,15 +200,17 @@ class AppointmentController extends Controller
      */
     public function availableSlots(Appointment $appointment, AvailabilityService $availability)
     {
-        $from = CarbonImmutable::today();
+        $from    = CarbonImmutable::today();
+        $horizon = $from->addDays((int) SiteSetting::get('booking_horizon_days', 30));
 
         return response()->json([
             'duration_min' => $appointment->duration_min,
-            'slots'        => $availability->slotsFor(
-                $appointment->service,
-                $from,
-                $from->addDays((int) SiteSetting::get('booking_horizon_days', 30)),
-            ),
+            // Bornes de la fenêtre explorée : sans elles, le calendrier ne
+            // peut pas distinguer un jour complet d'un jour simplement hors
+            // de l'horizon d'ouverture, et les deux s'afficheraient en gris.
+            'today'        => $from->toDateString(),
+            'horizon'      => $horizon->toDateString(),
+            'slots'        => $availability->slotsFor($appointment->service, $from, $horizon),
         ]);
     }
 
