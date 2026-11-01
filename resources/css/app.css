@@ -3149,3 +3149,155 @@ table.admin-table { width: 100%; border-collapse: collapse; font-size: 14px; }
     .sale-form  { grid-template-columns: 130px 1fr 160px; align-items: end; }
     .chart-area, .chart-scale { height: 240px; }
 }
+
+/* ==========================================================================
+   CHOIX ET RECADRAGE D'UN VISUEL
+   Le cadrage se décide ici, pas dans le CSS d'affichage : une photo envoyée
+   « à peu près » se fait rogner par object-fit, et c'est toujours le haut du
+   crâne ou le menton qui disparaît.
+   ========================================================================== */
+.picker { display: flex; flex-direction: column; gap: 10px; }
+
+/* L'aperçu adopte les proportions réelles du visuel sur le site : ce qu'on
+   voit ici est exactement ce que verra le client. */
+.picker-cadre {
+    position: relative;
+    width: 100%; max-width: 230px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-solid);
+    overflow: hidden;
+}
+.picker-cadre img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+.picker-vide {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    color: var(--faint);
+}
+.picker-vide em { font-style: normal; font-size: 12px; }
+
+.picker-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* Champ natif masqué sans display:none : un champ retiré du flux ne peut plus
+   recevoir le focus au clavier ni déclencher .click() sur certains navigateurs. */
+.picker-input {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+}
+
+/* ---------- Fenêtre de recadrage ---------- */
+.crop-fond {
+    position: fixed; inset: 0; z-index: 80;
+    display: flex; align-items: center; justify-content: center;
+    padding: 18px;
+    background: rgba(5, 5, 7, .82);
+}
+
+.crop-fenetre {
+    width: min(620px, 100%);
+    max-height: calc(100vh - 36px);
+    overflow-y: auto;
+    padding: 20px;
+    background: var(--surface-solid);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+}
+.crop-titre {
+    font-family: var(--font-title);
+    font-size: 22px; letter-spacing: .04em;
+    margin: 0 0 6px;
+}
+
+/* Hauteur bornée : sans cela une photo en 4000 px pousse les boutons de
+   validation hors de l'écran, et le recadrage paraît sans issue. */
+.crop-scene {
+    height: min(52vh, 420px);
+    background: var(--black);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+/* Cropper remplace cette image par son propre conteneur ; la largeur à 100 %
+   lui donne la mesure de départ, le max-width annule son style par défaut. */
+.crop-scene > img { display: block; width: 100%; max-width: 100%; }
+
+/* Taille de sortie, mise à jour à chaque geste. Discrète tant que tout va
+   bien, alarmante dès que la zone retenue passe sous la plus grande
+   variante du serveur. */
+.crop-taille {
+    display: flex; align-items: flex-start; gap: 8px;
+    margin: 10px 0 0;
+    font-size: 12px; line-height: 1.5;
+    color: var(--faint);
+}
+.crop-taille.is-faible { color: var(--yellow); }
+.crop-taille svg { flex: 0 0 auto; margin-top: 1px; }
+
+.crop-outils {
+    display: flex; align-items: center; gap: 8px;
+    margin: 12px 0 16px;
+}
+
+/*
+ * Validation toujours atteignable.
+ *
+ * En paysage sur téléphone, la fenêtre ne tient pas dans les 390 px de haut
+ * et « Valider le cadrage » tombait sous la ligne de flottaison : l'écran
+ * paraissait sans issue. La barre colle donc au bas de la zone défilante.
+ * Le décalage négatif compense le rembourrage de la fenêtre, sinon le
+ * contenu défilerait visiblement dans les 20 px laissés en dessous.
+ */
+.crop-fenetre .row-actions {
+    position: sticky; bottom: -20px;
+    margin-top: 4px;
+    padding: 10px 0 20px;
+    background: var(--surface-solid);
+}
+
+/* Écran bas — téléphone en paysage : la scène cède la place plutôt que de
+   repousser les commandes, et l'explication, qui ne se lit qu'une fois,
+   s'efface. */
+@media (max-height: 560px) {
+    .crop-fenetre { padding: 14px; }
+    .crop-fenetre .row-actions { bottom: -14px; padding-bottom: 14px; }
+    .crop-titre { font-size: 18px; margin-bottom: 0; }
+    .crop-fenetre > .field-help { display: none; }
+    .crop-scene { height: min(42vh, 200px); }
+    .crop-outils { margin: 8px 0 10px; }
+}
+
+/* Teinte du recadreur alignée sur la charte : son bleu système jure avec le
+   reste du back office. Les règles sont préfixées par .crop-scene pour passer
+   devant cropper.css par la spécificité — l'ordre de chargement des deux
+   feuilles dépend du bundler, s'y fier serait un pari. */
+.crop-scene .cropper-view-box { outline-color: var(--green); }
+.crop-scene .cropper-line,
+.crop-scene .cropper-point { background-color: var(--green); opacity: .95; }
+
+/*
+ * Les tailles de poignées ne sont PAS retouchées : cropper.css les fait
+ * varier avec la largeur d'écran — 20 px sur téléphone, 5 px au-delà de
+ * 1200 — et leur décalage de -3 px suppose la taille d'origine. Les
+ * redimensionner ici les décentrait et rendait la poignée tactile deux fois
+ * plus petite que prévu par la bibliothèque.
+ *
+ * Au doigt, on élargit donc la zone sensible sans toucher au point visible.
+ * Un pseudo-élément n'est pas une cible d'événement distincte : le clic est
+ * attribué à la poignée elle-même, ce sur quoi cropper.js s'appuie déjà pour
+ * sa poignée inférieure droite.
+ */
+@media (pointer: coarse) {
+    .crop-scene .cropper-point::after {
+        content: '';
+        position: absolute;
+        top: -11px; right: -11px; bottom: -11px; left: -11px;
+    }
+}
+/* Damier par défaut remplacé par le noir du site : derrière un PNG détouré,
+   son gris clair annonçait un fond qui n'existe pas. */
+.crop-scene .cropper-bg { background-image: none; background: var(--black); }
+/* Voile renforcé : à l'opacité d'origine, sur une photo déjà sombre, on ne
+   distingue plus la zone retenue de ce qui sera jeté. */
+.crop-scene .cropper-modal { background-color: #000; opacity: .66; }

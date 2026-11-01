@@ -31,6 +31,10 @@ const PATHS = {
     settings: '<circle cx="12" cy="12" r="3"/><path d="M12 2.5l1.6 2.6 3-.6.5 3 2.7 1.5-1.6 2.6 1.6 2.6-2.7 1.5-.5 3-3-.6L12 21.5l-1.6-2.6-3 .6-.5-3L4.2 15l1.6-2.6L4.2 9.8l2.7-1.5.5-3 3 .6z"/>',
     trash:    '<path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/>',
     pencil:   '<path d="M4 20h4L18.5 9.5l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
+    // Rotation d'un visuel dans l'écran de recadrage : la flèche décrit le
+    // sens de rotation, à ne pas confondre avec undo/redo de l'éditeur.
+    rotateLeft:  '<path d="M3.5 5v5.5H9"/><path d="M4.2 14.6a8.5 8.5 0 1 0 1.6-8.4L3.5 8.6"/>',
+    rotateRight: '<path d="M20.5 5v5.5H15"/><path d="M19.8 14.6a8.5 8.5 0 1 1-1.6-8.4l2.3 2.4"/>',
     undo:     '<path d="M4 8h10a5 5 0 0 1 0 10h-6M4 8l4-4M4 8l4 4"/>',
     redo:     '<path d="M20 8H10a5 5 0 0 0 0 10h6M20 8l-4-4M20 8l-4 4"/>',
     underline: '<path d="M7 4v7a5 5 0 0 0 10 0V4M5 20h14"/>',

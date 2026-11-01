@@ -1,11 +1,19 @@
 <script>
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import Icon from '@/Components/Icon.vue'
+import ImagePicker from '@/Components/ImagePicker.vue'
 import { Link, useForm } from '@inertiajs/vue3'
+
+/**
+ * Proportions du cadre de recadrage : exactement celles de `.service-visual`,
+ * où ces deux images sont affichées. Une valeur différente ici déplacerait le
+ * problème au lieu de le régler — le CSS rognerait ce que l'admin a cadré.
+ */
+const RATIO_VISUEL = 3 / 4
 
 export default {
     layout: AdminLayout,
-    components: { Icon, Link },
+    components: { Icon, ImagePicker, Link },
 
     props: {
         service: { type: Object, default: null },
@@ -27,8 +35,7 @@ export default {
                 image: null,
                 image_before: null,
             }),
-            preview: null,
-            previewBefore: null,
+            ratioVisuel: RATIO_VISUEL,
         }
     },
 
@@ -43,27 +50,10 @@ export default {
         },
     },
 
-    beforeUnmount() {
-        // Une URL d'objet occupe de la mémoire tant qu'on ne la libère pas
-        if (this.preview) URL.revokeObjectURL(this.preview)
-        if (this.previewBefore) URL.revokeObjectURL(this.previewBefore)
-    },
-
     methods: {
         /** Un second clic sur la pastille active rend la couleur automatique. */
         pickColor(color) {
             this.form.color = this.form.color === color ? '' : color
-        },
-
-        /** Les deux visuels suivent le même chemin : un seul gestionnaire. */
-        pickImage(event, champ = 'image') {
-            const apercu = champ === 'image' ? 'preview' : 'previewBefore'
-
-            if (this[apercu]) URL.revokeObjectURL(this[apercu])
-
-            const file = event.target.files[0]
-            this.form[champ] = file || null
-            this[apercu] = file ? URL.createObjectURL(file) : null
         },
 
         submit() {
@@ -168,7 +158,8 @@ export default {
         <div class="field">
             <span class="field-label">Visuels avant / après</span>
             <p class="field-help">
-                Format portrait. Les images trop grandes sont redimensionnées automatiquement.
+                Format portrait. Chaque image passe par un écran de recadrage : la zone
+                que vous retenez est exactement celle qui s'affichera sur le site.
                 L'animation ne se déclenche que si les deux sont renseignées ; avec le seul
                 visuel « après », la prestation affiche une image fixe.
             </p>
@@ -176,22 +167,24 @@ export default {
             <div class="visuels">
                 <div>
                     <span class="visuel-titre">Avant <em>— facultatif</em></span>
-                    <div class="thumb" style="margin-bottom: 10px"
-                         v-if="previewBefore || service?.before">
-                        <img :src="previewBefore || service.before" alt="">
-                    </div>
-                    <input type="file" accept="image/*" @change="pickImage($event, 'image_before')">
-                    <span class="field-error" v-if="form.errors.image_before">{{ form.errors.image_before }}</span>
+                    <ImagePicker
+                        v-model="form.image_before"
+                        :ratio="ratioVisuel"
+                        :current="service?.before"
+                        :error="form.errors.image_before"
+                        alt="Visuel avant"
+                    />
                 </div>
 
                 <div>
                     <span class="visuel-titre">Après <em>— visuel principal</em></span>
-                    <div class="thumb" style="margin-bottom: 10px"
-                         v-if="preview || service?.image">
-                        <img :src="preview || service.image" alt="">
-                    </div>
-                    <input type="file" accept="image/*" @change="pickImage($event, 'image')">
-                    <span class="field-error" v-if="form.errors.image">{{ form.errors.image }}</span>
+                    <ImagePicker
+                        v-model="form.image"
+                        :ratio="ratioVisuel"
+                        :current="service?.image"
+                        :error="form.errors.image"
+                        alt="Visuel après"
+                    />
                 </div>
             </div>
         </div>
