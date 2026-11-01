@@ -101,6 +101,10 @@ export default {
     },
 
     beforeUnmount() {
+        // Démontage pendant que la fenêtre est ouverte — changement de page
+        // par exemple : sans ce filet, le corps resterait bloqué.
+        if (this.ouvert) document.body.style.overflow = this.defilementInitial ?? ''
+
         window.removeEventListener('keydown', this.auClavier)
         this.detruire()
         this.libererSource()
@@ -131,6 +135,19 @@ export default {
 
             this.libererSource()
             this.source = URL.createObjectURL(fichier)
+            this.ouvrir()
+        },
+
+        /**
+         * Ouverture, défilement de fond verrouillé.
+         *
+         * Sans cela, la molette passée à côté du cadre fait défiler le
+         * formulaire derrière le voile : on rouvre les yeux sur une page qui
+         * a bougé, et la fenêtre semble avoir sauté.
+         */
+        ouvrir() {
+            this.defilementInitial = document.body.style.overflow
+            document.body.style.overflow = 'hidden'
             this.ouvert = true
 
             // Le <img> n'existe qu'une fois la fenêtre rendue
@@ -186,6 +203,7 @@ export default {
             this.detruire()
             this.libererSource()
             this.ouvert = false
+            document.body.style.overflow = this.defilementInitial ?? ''
         },
 
         /**
@@ -274,8 +292,7 @@ export default {
 
             this.libererSource()
             this.source = URL.createObjectURL(this.modelValue)
-            this.ouvert = true
-            this.$nextTick(() => this.demarrer())
+            this.ouvrir()
         },
 
         retirer() {
@@ -314,12 +331,24 @@ export default {
 
         <span class="field-error" v-if="error">{{ error }}</span>
 
-        <!-- Fenêtre de recadrage. Montée seulement à l'ouverture : Cropper
-             mesure son conteneur au démarrage et renverrait des dimensions
-             nulles sur un élément caché. -->
-        <!-- .self : un relâchement de souris qui part du cadre de recadrage et
-             finit sur le voile ne doit pas fermer la fenêtre, sinon un
-             ajustement un peu large efface le travail en cours. -->
+        <!--
+            Fenêtre de recadrage, déportée dans <body>.
+
+            Elle ne peut pas rester dans la carte : `.card` porte un
+            backdrop-filter, et un filtre d'arrière-plan fait de l'élément le
+            référentiel de ses descendants en position: fixed. Le voile se
+            calait donc sur la carte — 1553 px de haut sur un formulaire
+            long — au lieu de l'écran, et la fenêtre s'ouvrait à près de
+            200 px au-dessus du centre, titre coupé.
+
+            Montée seulement à l'ouverture : Cropper mesure son conteneur au
+            démarrage et renverrait des dimensions nulles sur un élément caché.
+
+            .self : un relâchement de souris qui part du cadre de recadrage et
+            finit sur le voile ne doit pas fermer la fenêtre, sinon un
+            ajustement un peu large efface le travail en cours.
+        -->
+        <Teleport to="body">
         <div v-if="ouvert" class="crop-fond" role="dialog" aria-modal="true"
              aria-label="Recadrer l'image" @click.self="fermer">
             <div class="crop-fenetre">
@@ -366,5 +395,6 @@ export default {
                 </div>
             </div>
         </div>
+        </Teleport>
     </div>
 </template>
