@@ -131,20 +131,26 @@ export default {
         /**
          * Largeur sous laquelle le zoom se bloque.
          *
-         * Le besoin le plus élevé que la photo d'origine peut ENCORE honorer,
-         * et non l'exigence absolue. Une photo de 700 px ne pourra jamais
-         * servir un téléphone : y poser la borne du téléphone bloquerait le
-         * zoom dès le premier cran, sur une photo pourtant utilisable. On
-         * descend donc l'échelle des besoins jusqu'au premier qu'elle peut
-         * tenir — l'ordinateur, le plus souvent — pour garder un garde-fou
-         * au lieu d'en abandonner l'idée.
+         * Le besoin de l'appareil le MOINS exigeant, et non du plus. Une
+         * version précédente bloquait sur le téléphone : le cadrage s'arrêtait
+         * au bout d'un zoom ×1,8 sur une photo de 4000 px, ce qui est très
+         * vite. Et c'était incohérent — les badges annoncent qu'entre 75 et
+         * 100 % du besoin l'œil ne voit rien, mais la borne, elle, refusait
+         * de descendre sous 100 %.
          *
-         * Zéro quand la photo est trop petite même pour le moins exigeant :
-         * il n'y a alors plus rien à protéger, et l'avertissement prend le
-         * relais.
+         * Le partage est maintenant net. Les badges informent, appareil par
+         * appareil : c'est là que se juge le compromis, et c'est au barbier
+         * de le prendre. La borne, elle, ne garde qu'un plancher — celui sous
+         * lequel même un écran de bureau recevrait une image molle, où il n'y
+         * a plus de compromis à arbitrer, juste un mauvais résultat.
+         *
+         * Zéro quand la photo est trop petite même pour ce plancher : il n'y
+         * a alors plus rien à protéger, et l'avertissement prend le relais.
          */
         plancher() {
-            return this.besoins.find((b) => b <= this.largeurMax) || 0
+            const moindre = this.besoins[this.besoins.length - 1] || 0
+
+            return moindre <= this.largeurMax ? moindre : 0
         },
 
         /** Dimensions de sortie, largeur plafonnée à ce que le serveur sert. */
@@ -343,14 +349,35 @@ export default {
                  * — vérifié en navigateur. Sous l'exigence, on refuse le cran.
                  */
                 zoom: (e) => {
-                    if (!this.plancher) return
+                    if (!this.plancher || this.ajuste) return
+                    // Dézoomer est toujours permis : on s'éloigne du plancher.
+                    if (e.detail.ratio <= e.detail.oldRatio) return
 
                     const cadre = this.cropper.getCropBoxData().width
-                    const apres = cadre / e.detail.ratio
+                    // Échelle qui poserait la zone retenue pile sur le plancher
+                    const vise = cadre / this.plancher
 
-                    if (e.detail.ratio > e.detail.oldRatio && apres < this.plancher) {
-                        e.preventDefault()
-                        this.signalerRefus()
+                    if (e.detail.ratio <= vise) return
+
+                    e.preventDefault()
+                    this.signalerRefus()
+
+                    /*
+                     * Le cran demandé dépasse, mais il reste souvent de la
+                     * marge avant le plancher. Refuser le cran entier la
+                     * perdait : le zoom s'arrêtait à 1280 px quand 1200
+                     * étaient permis, soit 7 % de cadrage abandonnés sans
+                     * raison. On prend donc exactement ce qui reste.
+                     *
+                     * Reporté d'un cycle, sinon zoomTo relancerait cet
+                     * écouteur depuis l'intérieur de lui-même.
+                     */
+                    if (vise > e.detail.oldRatio * 1.002) {
+                        this.ajuste = true
+                        this.$nextTick(() => {
+                            this.cropper.zoomTo(vise)
+                            this.ajuste = false
+                        })
                     }
                 },
                 /*
