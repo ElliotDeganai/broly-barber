@@ -3,6 +3,7 @@
 use App\Http\Middleware\EnsureIsAdmin;
 use App\Http\Middleware\EnsureNotBlocked;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\SearchVisibility;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -27,6 +28,16 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
+
+        /*
+         * Consigne « noindex » tant que seo.indexable est faux.
+         *
+         * Pile globale et non groupe « web » : l'en-tête doit aussi partir sur
+         * ce qui ne passe pas par les sessions — réponses JSON, fichiers
+         * exportés, routes de santé. Un seul chemin oublié suffit à faire
+         * entrer une adresse dans l'index.
+         */
+        $middleware->append(SearchVisibility::class);
 
         /*
          * Où renvoyer un visiteur non connecté.

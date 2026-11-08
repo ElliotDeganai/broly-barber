@@ -1,2 +1,22 @@
+# Exploration volontairement AUTORISÉE sur l'essentiel du site.
+#
+# Contre-intuitif, mais c'est la seule façon d'en sortir : la directive
+# noindex voyage dans l'en-tête HTTP X-Robots-Tag et dans la balise
+# <meta robots> de chaque page. Un robot qui n'a pas le droit d'ouvrir la
+# page ne lit jamais cette directive — Google affiche alors l'adresse nue,
+# sans titre ni description, et elle peut y rester des mois.
+#
+# Un « Disallow: / » ici annulerait donc la désindexation au lieu de la
+# renforcer. À n'envisager que le jour où le site aura disparu des
+# résultats, et seulement pour économiser du trafic de robots.
+
 User-agent: *
-Disallow:
+
+# Les seules exceptions : des adresses qu'il ne faut pas OUVRIR, et pas
+# seulement tenir hors de l'index. Un lien magique est à usage unique —
+# un robot qui le suit consomme le jeton, et le client reçoit un lien
+# déjà mort. Même logique pour les retours d'authentification externe.
+Disallow: /lien-magique/
+Disallow: /auth/
+
+Allow: /
